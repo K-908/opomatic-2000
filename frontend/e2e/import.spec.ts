@@ -1,0 +1,48 @@
+import { expect, test } from '@playwright/test'
+
+test('P08: preview, rejection, conflict and import summary against PHP', async ({ page }) => {
+  await page.goto('/questions/import')
+  await page.getByLabel('Nombre de usuario').fill('Gogloglo')
+  await page.getByLabel('Contraseña').fill(process.env.OPOMATIC_E2E_GOGLOGLO_PASSWORD ?? '')
+  await page.getByRole('button', { name: 'Iniciar sesión' }).click()
+  await expect(page.getByRole('heading', { name: 'Importar JSON', exact: true })).toBeVisible()
+  const file = page.getByLabel('Archivo JSON')
+  const question = { statement: 'Pregunta P08 del navegador', options: ['Una', 'Dos', 'Tres', 'Cuatro'], correctOption: 4 }
+  const upload = async (document: unknown) => file.setInputFiles({ name: 'importacion-p08.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(document)) })
+  await file.setInputFiles({ name: 'incorrecto.txt', mimeType: 'text/plain', buffer: Buffer.from('{}') })
+  await expect(page.getByRole('alert')).toContainText('extensión .json')
+  await file.setInputFiles({ name: 'grande.json', mimeType: 'application/json', buffer: Buffer.alloc(5 * 1024 * 1024 + 1, ' ') })
+  await expect(page.getByRole('alert')).toContainText('5 MB')
+  await file.setInputFiles({ name: 'malformado.json', mimeType: 'application/json', buffer: Buffer.from('{invalid') })
+  await expect(page.getByRole('alert')).toContainText('documento JSON válido')
+  await upload({ topics: [{ name: 'Nunca guardar P08', questions: [{ ...question, options: ['Solo una'] }] }] })
+  await expect(page.getByRole('heading', { name: 'Resumen antes de importar' })).toBeVisible()
+  await page.getByRole('button', { name: 'Confirmar importación' }).click()
+  await expect(page.getByRole('heading', { name: 'Errores encontrados' })).toBeVisible()
+  await expect(page.locator('.import-errors')).toContainText('topics[0].questions[0].options')
+  const afterInvalid = await page.request.get('/api/topics?includeInactive=true')
+  expect((await afterInvalid.json()).map((topic: { name: string }) => topic.name)).not.toContain('Nunca guardar P08')
+  await upload({ topics: [{ name: 'Tema P08 inactivo', questions: [question] }] })
+  await page.getByRole('button', { name: 'Confirmar importación' }).click()
+  await expect(page.getByRole('alert')).toContainText('temas inactivos')
+  await expect(page.locator('.import-errors')).toContainText('topics[0].name')
+  const document = { topics: [
+    { name: 'Tema P08 existente', questions: [{ ...question, statement: 'Pregunta P08 reutilizada', correctOption: 1 }] },
+    { name: 'Tema P08 navegador', questions: [question] },
+  ] }
+  await upload(document)
+  await expect(page.getByText('Temas', { exact: true }).locator('..')).toContainText('2')
+  await expect(page.getByText('Preguntas', { exact: true }).locator('..')).toContainText('2')
+  await page.route('**/api/questions/import', async route => { await new Promise(resolve => setTimeout(resolve, 500)); await route.continue() }, { times: 1 })
+  await page.getByRole('button', { name: 'Confirmar importación' }).click()
+  await expect(page.getByRole('button', { name: 'Importando…' })).toBeDisabled()
+  await expect(page.getByRole('status')).toContainText('2 preguntas importadas; 1 temas creados y 1 reutilizados.')
+  await upload(document)
+  await page.getByRole('button', { name: 'Confirmar importación' }).click()
+  await expect(page.getByRole('status')).toContainText('2 preguntas importadas; 0 temas creados y 2 reutilizados.')
+  await page.getByRole('link', { name: 'Ver preguntas importadas', exact: true }).click()
+  await expect(page.locator('.question-list > li')).toHaveCount(4)
+  await page.getByRole('link', { name: 'Editar Pregunta P08 del navegador', exact: true }).first().click()
+  await expect(page.getByLabel('Opción 4 correcta', { exact: true })).toBeChecked()
+  await expect(page.getByLabel('Opción 1', { exact: true })).toHaveValue('Una')
+})

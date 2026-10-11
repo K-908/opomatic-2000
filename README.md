@@ -7,8 +7,8 @@ una base de datos vacía: no hay migración de datos de SQLite ni de SQL Server.
 ## Estado
 
 El frontend React está copiado y PHP ya dispone de enrutamiento HTTP,
-`GET /health`, errores Problem Details, acceso PDO a MySQL y autenticación.
-**Los endpoints de temas, preguntas, tests y estadísticas siguen pendientes**,
+`GET /health`, errores Problem Details, acceso PDO a MySQL, autenticación, gestión de temas/preguntas, importación JSON, generación, entrega/corrección de tests y detalle del intento.
+**El listado del histórico y las estadísticas siguen pendientes**,
 por lo que la aplicación completa no puede
 usarse ni publicarse todavía. Los documentos describen el contrato
 y el trabajo pendiente; el historial de tareas cerradas de OpoMatic-3000 no se
@@ -19,11 +19,11 @@ presenta aquí como trabajo ya realizado.
 ```text
 backend/
   public/            Punto de entrada web y router local de PHP
-  src/Http/          Salud, autenticación y respuestas; otras rutas pendientes
-  src/Application/   Casos de uso (pendiente)
-  src/Domain/        Reglas y modelos puros (pendiente)
+  src/Http/          Salud, cuentas, banco, tests y detalle de intento
+  src/Application/   Cuentas, banco, tests y snapshots
+  src/Domain/        Validación, puntuación y errores del banco/tests
   src/Infrastructure/ PDO, sesiones, repositorios y transacciones
-  tests/Unit/        Pruebas de reglas (pendiente)
+  tests/Unit/        Pruebas de protección/caducidad de tokens
   tests/Integration/ Pruebas del núcleo HTTP y de MySQL
 database/schema.sql  Esquema inicial importable con phpMyAdmin
 deploy/apache/       Configuración de publicación (pendiente)
@@ -69,7 +69,7 @@ y `DB_PASSWORD` en el proceso PHP. Usa [`.env.example`](.env.example) solo como
 lista de variables; copiarla a `.env` no configura la aplicación. La conexión
 usa `utf8mb4`, consultas preparadas nativas y transacciones para operaciones
 compuestas. `composer install` comprueba que estén disponibles `pdo` y
-`pdo_mysql`. La API todavía no usa la base porque faltan los endpoints.
+`pdo_mysql`. La autenticación y el registro de accesos ya usan la base; los endpoints de tests, histórico y estadísticas siguen pendientes.
 
 Para repetir la prueba de integración local en **dos bases temporales nuevas**,
 con un usuario MySQL que pueda crearlas y borrarlas:
@@ -147,6 +147,155 @@ $env:OPOMATIC_DB_ADMIN_PASSWORD = Read-Host 'Contraseña MySQL de prueba'
 Remove-Item Env:OPOMATIC_DB_ADMIN_PASSWORD
 ```
 
+## Gestión de temas (P06)
+
+La API implementa lista, detalle, alta, edición y activación/desactivación en
+`/api/topics`. Los nombres admiten entre 1 y 150 caracteres Unicode; se eliminan
+espacios exteriores y la colación `utf8mb4_unicode_ci` impide duplicados sin
+distinguir mayúsculas ni acentos, incluidos los temas inactivos. Desactivar
+un tema conserva sus preguntas y su estado individual. React funciona contra
+estas rutas con la sesión y el token CSRF existentes.
+
+Con PHP 8.2+ (PDO MySQL y cURL), Composer, Node y MySQL/MariaDB disponibles en
+PATH, prepara Chromium una vez con `npm.cmd run test:e2e:install` en `frontend/`.
+Después define `OPOMATIC_DB_ADMIN_PASSWORD` en el proceso y ejecuta desde la raíz:
+
+```powershell
+.\backend\tests\Integration\RunDatabaseTest.ps1 -AdminUser root -Topics
+```
+
+El runner importa el esquema en bases temporales, genera contraseñas aleatorias,
+prueba las rutas y ejecuta `topics.spec.ts` contra PHP y Vite. Incluye teclado,
+validación, duplicados, confirmación, filtros y estados de carga, vacío y error.
+Comprueba una copia/restauración y elimina las bases y servidores temporales.
+Para repetir la regresión de autenticación usa `-Authentication` por separado.
+
+## Gestión de preguntas (P07)
+
+La API implementa lista paginada, detalle administrativo, alta, edición y estado
+lógico en `/api/questions`. Admite filtros por tema, preguntas inactivas y texto,
+con páginas de hasta 100 elementos. El detalle muestra las cuatro opciones y su
+respuesta correcta; la lista no expone opciones. El banco es compartido entre
+las dos cuentas autenticadas.
+
+PHP valida enunciados de 1–10.000 caracteres, textos de opción de 1–1.000,
+cuatro posiciones distintas y una única correcta. Alta y edición son atómicas;
+al editar se conservan los IDs de las opciones y los snapshots históricos.
+Guardar o reactivar exige un tema activo. El listado administrativo permite
+mantener preguntas de temas inactivos; la generación de P09 las excluye. La importación JSON corresponde a P08.
+
+Con el mismo entorno de pruebas y Chromium preparados para P06:
+
+```powershell
+.\backend\tests\Integration\RunDatabaseTest.ps1 -AdminUser root -Questions
+```
+
+Este modo prueba las rutas, rollback ante errores forzados y conservación de
+snapshots con claves foráneas reales. Ejecuta `questions.spec.ts` contra PHP y
+Vite, comprueba copia/restauración y elimina sus bases y servidores temporales.
+
+## Importación JSON (P08)
+
+`POST /api/questions/import` acepta el documento de
+`frontend/public/examples/questions-import-example.json`, con temas, preguntas,
+cuatro textos de opción y `correctOption` de 1 a 4. Requiere sesión y CSRF.
+El formulario permite seleccionar un archivo, previsualizar cantidad de temas
+y preguntas, confirmar y consultar el resumen de temas creados/reutilizados.
+
+El servidor admite hasta 5 MB (5.242.880 bytes) y 2.000 preguntas. Valida todo
+el documento; devuelve 400 con rutas precisas, 409 para temas inactivos y 413
+si se excede el tamaño. Los nombres usan la misma colación que Temas, sin distinguir
+mayúsculas ni acentos, y se eliminan espacios exteriores. Cada tema debe
+contener preguntas; el límite de preguntas permite como máximo 2.000 temas.
+
+Los temas activos se reutilizan sin cambiar nombre, estado ni fechas; los
+nuevos se crean activos. Todo se guarda en una única transacción. Si falla
+cualquier inserción, se revierte la importación completa. La importación es
+acumulativa: repetir un archivo vuelve a insertar sus preguntas.
+
+Con el entorno y Chromium preparados para las pruebas anteriores:
+
+```powershell
+.\backend\tests\Integration\RunDatabaseTest.ps1 -AdminUser root -Import
+```
+
+Este modo verifica límites exactos, rutas de validación, duplicados, conflictos,
+reutilización y rollback forzado, y ejecuta `import.spec.ts` contra PHP y Vite.
+Usa cuentas aleatorias y bases temporales, comprueba copia/restauración y
+elimina sus bases y servidores al terminar.
+
+## Generación de tests (P09)
+
+`POST /api/tests/generate` acepta `topicIds` sin repetir y `numberOfQuestions`
+de 1 a 200, con sesión y CSRF. Selecciona preguntas activas de temas activos,
+sin repetición, y baraja preguntas y opciones en PHP con `random_int()`.
+La respuesta conserva el contrato de React, sin `isCorrect`. Temas
+inexistentes/inactivos devuelven 404; insuficiencia, 409 con los conteos
+`requestedCount` y `availableCount`.
+
+El token opaco AES-256-GCM conserva usuario, IDs y orden, con caducidad de
+doce horas. Exige OpenSSL y `APP_KEY` privado de al menos 32 bytes aleatorios.
+Para desarrollo, genera la clave **antes de arrancar PHP** y consérvala en
+ese entorno mientras uses sus tokens:
+
+```powershell
+$env:APP_KEY = (& php -r 'echo bin2hex(random_bytes(32));')
+composer serve
+```
+
+En hosting configura una clave estable fuera de Git y del directorio público;
+cambiarla invalida todos los tokens anteriores. `.env.example` es una referencia
+y no se carga automáticamente.
+
+Con el entorno de pruebas anterior:
+
+```powershell
+composer test:tokens
+.\backend\tests\Integration\RunDatabaseTest.ps1 -AdminUser root -Generation
+```
+
+El runner genera una clave temporal propia, comprueba HTTP y
+`generation.spec.ts` en Chromium, restaura la configuración y elimina bases y
+servidores de prueba. Verifica validación, conteos reales, navegación conservando
+respuestas, abandono y pérdida del test al recargar. Generar no guarda un
+intento ni progreso en MySQL, localStorage o sessionStorage. La entrega y
+corrección están implementadas en P10.
+
+## Entrega y corrección (P10)
+
+`POST /api/tests/finish` acepta `submissionId` UUID, `testToken` y una entrada
+por pregunta en `answers`, con `selectedOptionId` entero o `null` explícito.
+Requiere sesión y CSRF. Verifica token, cuenta, caducidad y opciones propias;
+corrige en servidor y guarda intento y snapshots en una sola transacción.
+La nota aplica `(10/N)*(A-0,25*F)`, puede ser negativa y se guarda en
+millonésimas sin redondeos intermedios. React la presenta con dos decimales.
+
+La primera entrega devuelve 201 y la repetición compatible, 200 con el mismo
+intento. Un UUID usado con datos diferentes devuelve 409; un token caducado,
+410; un token ajeno o CSRF inválido, 403. Una carrera no duplica intentos y un
+fallo en cualquier snapshot revierte la entrega completa.
+
+React abre el resultado en `/attempts/{id}`. La API `GET /api/attempts/{id}`
+lee solo snapshots de la cuenta autenticada y devuelve 404 para intentos
+ajenos. La revisión conserva texto, opciones, orden, selección y correcta
+aunque se edite/desactive después el banco. Al corregir usa el contenido actual
+del banco; un token vigente puede entregarse tras una desactivación lógica.
+Listado y paginación del histórico corresponden a P11.
+
+Con el entorno PHP 8.2+, OpenSSL, PDO MySQL, cURL y Chromium anterior:
+
+```powershell
+composer test:scoring
+composer test:tokens
+.\backend\tests\Integration\RunDatabaseTest.ps1 -AdminUser root -Completion
+```
+
+El modo `-Completion` prueba HTTP, dos entregas simultáneas con procesos PHP,
+rollback forzado y el recorrido `completion.spec.ts` desde nuevo test hasta
+la revisión. Simula perder la respuesta después de guardarla en PHP y verifica
+que React reintenta sin duplicar el intento. Usa cuentas/clave/bases temporales,
+comprueba copia/restauración y elimina sus recursos al finalizar.
+
 ## Frontend
 
 El frontend es **React**, no Angular. Para verificarlo localmente:
@@ -171,7 +320,9 @@ Apache necesitará enviar `/api/*` a PHP y las rutas de la SPA a `index.html`.
 La configuración concreta se preparará con la API y se verificará en el
 hosting elegido. Compilar React no sustituye el backend.
 
-Los recorridos Playwright copiados quedan pendientes hasta que exista PHP.
+Los recorridos Playwright de banco, generación y entrega hasta la revisión
+ya se verifican contra PHP en P06–P10. El recorrido integral copiado sigue
+pendiente hasta completar el listado del histórico y las estadísticas.
 `npm.cmd run test:e2e` exige una instalación local de prueba y las variables
 `OPOMATIC_E2E_BASE_URL`, `OPOMATIC_E2E_GOGLOGLO_PASSWORD` y
 `OPOMATIC_E2E_VIRGINIA_PASSWORD`; no arranca ni modifica el repositorio .NET.

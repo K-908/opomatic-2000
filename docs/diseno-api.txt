@@ -6,8 +6,9 @@ CONTRATO OBJETIVO PARA LA MIGRACIÓN A PHP
 
 Este documento conserva el contrato que espera el frontend React. La API PHP
 deberá implementarlo y se documentará en OpenAPI al programarla. Por ahora
-existen `GET /health` y las cuatro rutas de autenticación; las demás rutas
-funcionales describen comportamiento objetivo. El enrutamiento y los errores
+existen salud, autenticación, temas, preguntas, importación y generación
+de tests, entrega y detalle de intento; listado del histórico y estadísticas
+describen comportamiento objetivo. El enrutamiento y los errores
 HTTP básicos también están implementados.
 
 En producción la API se sirve bajo `/api` en el mismo origen que React. En
@@ -120,7 +121,7 @@ Respuesta 200:
 ]
 
 Por defecto solo devuelve temas activos. La pantalla de administración puede
-solicitar también los inactivos.
+solicitar también los inactivos. includeInactive admite true o false; otro valor devuelve 400. La lista se ordena por nombre e id. activeQuestionCount cuenta preguntas con IsActive = true aunque el tema esté inactivo.
 
 
 6.2. Obtener un tema
@@ -145,7 +146,7 @@ Respuesta 201: tema creado y cabecera Location.
 Validaciones:
 
 - Nombre obligatorio y dentro del límite.
-- Nombre único ignorando mayúsculas, minúsculas y espacios exteriores.
+- Nombre único ignorando mayúsculas, minúsculas y espacios exteriores. La colación utf8mb4_unicode_ci también ignora acentos; la unicidad incluye temas inactivos.
 
 
 6.4. Editar un tema
@@ -179,7 +180,7 @@ Reglas:
 - Al reactivar el tema vuelven a estar disponibles sus preguntas que conserven
   isActive = true.
 
-Respuestas: 204, 404 o 409.
+Respuestas: 204, 400 (isActive ausente o no booleano), 404 o 409.
 
 
 7. PREGUNTAS
@@ -189,7 +190,14 @@ Respuestas: 204, 404 o 409.
 
     GET /questions?topicId=1&includeInactive=false&search=&page=1&pageSize=20
 
-Cada filtro es opcional. La respuesta es paginada.
+Cada filtro es opcional. La respuesta es paginada. page empieza en 1 y
+pageSize admite 1–100 (20 por defecto); valores inválidos devuelven 400.
+La lista se ordena por updatedAtUtc descendente y después por id ascendente.
+search busca una subcadena literal del enunciado (sin comodines SQL), elimina
+espacios exteriores y usa la colación utf8mb4_unicode_ci. includeInactive
+filtra el estado individual de la pregunta; la lista es administrativa y no
+excluye preguntas por el estado de su tema. Los nuevos tests sí deberán
+excluir preguntas o temas inactivos (sección 9). No incluye respuestas correctas.
 
 Elemento de lista:
 
@@ -248,9 +256,9 @@ Validaciones:
 - Enunciado obligatorio y dentro del límite.
 - Exactamente cuatro opciones con posiciones 1, 2, 3 y 4.
 - Textos obligatorios y dentro del límite.
-- Exactamente una opción correcta.
+- Exactamente una opción correcta; isCorrect debe ser booleano en cada opción.
 
-Respuesta 201: detalle de la pregunta creada.
+Respuesta 201: detalle de la pregunta creada y Location: /api/questions/{id}. Un tema inexistente devuelve 404; un tema inactivo, 409.
 
 
 7.4. Editar una pregunta
@@ -259,7 +267,7 @@ Respuesta 201: detalle de la pregunta creada.
 
 Utiliza el mismo cuerpo que la creación. Las cuatro opciones existentes se
 actualizan por posición dentro de una única transacción, conservando sus
-identificadores internos para no romper referencias históricas.
+identificadores internos para no romper referencias históricas. No modifica snapshots de intentos existentes. Las validaciones devuelven errors.statement, errors.options, errors.correctOption y errors.options[posición].text (posiciones 1–4), compatibles con React.
 
 Respuestas: 200, 400, 404 o 409.
 
@@ -277,7 +285,7 @@ Petición:
 - No se puede activar una pregunta si su tema está inactivo.
 - Desactivar no modifica los intentos históricos.
 
-Respuestas: 204, 404 o 409.
+Respuestas: 204, 400 (isActive ausente o no booleano), 404 o 409.
 
 
 8. IMPORTACIÓN JSON
@@ -312,12 +320,19 @@ Contrato definitivo inicial:
 
 Reglas:
 
-- correctOption usa posiciones del 1 al 4.
+- correctOption es un entero con posiciones del 1 al 4.
+- Los nombres se comparan con utf8mb4_unicode_ci; también se ignoran acentos, igual que en Topics.
 - No se permiten temas repetidos dentro del mismo archivo, ignorando
   mayúsculas, minúsculas y espacios exteriores.
 - Si el tema no existe, se crea.
 - Si existe y está activo, se reutiliza.
 - Si existe pero está inactivo, se devuelve un conflicto.
+- topics debe ser una lista no vacía; cada tema debe incluir preguntas.
+- Nombres, enunciados y opciones conservan los límites y normalización de las secciones 6 y 7.
+- El límite de tamaño es 5 * 1024 * 1024 bytes: un exceso devuelve 413. Se leen como máximo el límite más un byte para detectar el exceso.
+- Más de 2.000 preguntas devuelve 400 con errors.topics. El límite incluye el total de todos los temas.
+- Los errores de opción usan índices desde cero, como topics[0].questions[0].options[3].
+- Duplicados y temas inactivos incluyen errors.topics[índice].name; el conflicto inactivo devuelve 409.
 - Primero se valida el documento completo.
 - Si existe cualquier error, no se importa ningún dato.
 - Si todo es correcto, se guarda todo en una única transacción.
@@ -397,6 +412,20 @@ identificadores y el orden generado, y caduca a las 12 horas. No representa un
 registro guardado en MySQL ni permite recuperar el progreso al recargar.
 
 
+Implementado en P09: los IDs de temas deben ser enteros positivos de 32 bits,
+sin repeticiones, y numberOfQuestions un entero de 1 a 200. Un tema inexistente
+o inactivo produce 404; entrada inválida, 400 con errors; falta de sesión, 401;
+CSRF ausente/incorrecto, 403. Una petición válida con insuficiencia devuelve
+Problem Details 409 con requestedCount y availableCount en el nivel superior.
+
+El token PHP es opaco, versionado y cifrado/autenticado con AES-256-GCM;
+protege usuario, emisión/caducidad, temas, IDs de preguntas/opciones y su orden.
+Se configura APP_KEY privado de al menos 32 bytes aleatorios; no hay clave
+de reserva. Cambiarla invalida los tokens anteriores. La respuesta de generación
+lleva Cache-Control: no-store. El verificador distingue token inválido,
+cuenta ajena y token caducado; P10 devuelve respectivamente 400, 403 y 410.
+
+
 10. FINALIZACIÓN DE TESTS
 
 
@@ -448,10 +477,34 @@ Errores adicionales:
 - 410 Gone si el token ha caducado.
 
 
+Implementado en P10: UUID textual no vacío normalizado a minúsculas; answers
+contiene 1–200 objetos con questionId entero positivo y selectedOptionId entero
+positivo o null explícito. El orden de answers no afecta a la entrega.
+400 con errors para datos inválidos, token alterado o contenido inconsistente;
+401 sin sesión, 403 sin CSRF o token de otra cuenta, 410 si ha caducado.
+
+La corrección usa el contenido actual del banco al entregar, incluso tras una
+desactivación lógica si el token sigue vigente. Deben conservarse los cuatro
+IDs de opciones del token y existir una única correcta. Se guardan instantáneas
+del contenido usado al corregir. Cambios posteriores no afectan al intento.
+
+Score se guarda como entero en millonésimas: (4*A-F)*2.500.000/N, sin redondeos
+intermedios. Se redondea una sola vez a la millonésima más próxima, con mitades
+alejándose de cero; versión de regla 1. HTTP devuelve puntos y React dos decimales.
+
+La primera entrega lleva Location: /api/attempts/{id}. La repetición compatible
+(usuario, preguntas, orden de preguntas/opciones y selección) devuelve el
+resultado original sin volver a puntuar. Un UUID con datos incompatibles,
+incluida otra cuenta, produce 409 sin revelar el intento existente. Se verifica
+el token vigente también al reintentar. La clave única de MySQL resuelve
+carreras concurrentes; intento y todos los snapshots se guardan o revierten
+juntos. Respuestas de entrega y detalle llevan Cache-Control: no-store.
+
+
 11. HISTORIAL Y REVISIÓN
 
 
-11.1. Listar intentos
+11.1. Listar intentos (pendiente P11)
 
     GET /attempts?page=1&pageSize=20
 
@@ -474,7 +527,7 @@ Respuesta paginada. Elemento:
 Orden predeterminado: completedAtUtc descendente.
 
 
-11.2. Obtener un intento completo
+11.2. Obtener un intento completo (implementado en P10 para el resultado final)
 
     GET /attempts/{id}
 
@@ -512,6 +565,8 @@ Respuesta 200:
 
 result puede ser unanswered, correct o incorrect. Todo el texto procede de las
 instantáneas del intento, no del banco de preguntas actual.
+La ruta exige sesión; solo devuelve el intento del usuario autenticado.
+Un ID ausente, inválido o perteneciente a otra cuenta produce 404.
 
 
 12. ESTADÍSTICAS

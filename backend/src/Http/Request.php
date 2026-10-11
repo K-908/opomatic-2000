@@ -52,7 +52,12 @@ final readonly class Request
             $headers['Content-Type'] = (string) $_SERVER['CONTENT_TYPE'];
         }
 
-        $body = file_get_contents('php://input');
+        $uri = (string) ($_SERVER['REQUEST_URI'] ?? '/');
+        $isImport = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && parse_url($uri, PHP_URL_PATH) === '/api/questions/import';
+        // Read at most the limit plus one byte, enough to distinguish a 413.
+        $body = $isImport
+            ? file_get_contents('php://input', false, null, 0, \OpoMatic2000\Domain\QuestionImportDocument::MAXIMUM_BYTES + 1)
+            : file_get_contents('php://input');
         if ($body === false) {
             $body = '';
         }

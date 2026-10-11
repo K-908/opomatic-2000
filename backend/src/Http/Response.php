@@ -45,6 +45,8 @@ final readonly class Response
             $payload['errors'] = $problem->errors;
         }
 
+        $payload += $problem->extensions;
+
         return new self(
             $problem->status,
             ['Content-Type' => 'application/problem+json; charset=utf-8', ...$problem->headers],

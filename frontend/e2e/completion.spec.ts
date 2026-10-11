@@ -1,0 +1,96 @@
+import { expect, test } from '@playwright/test'
+import type { GeneratedTest, FinishedTest } from '../src/features/tests/api/testsApi'
+
+test('P10: complete, lose response, retry without duplicates and review immutable snapshots against PHP', async ({ page }) => {
+  await page.goto('/tests/new')
+  await page.getByLabel('Nombre de usuario').fill('Gogloglo')
+  await page.getByLabel('Contraseña').fill(process.env.OPOMATIC_E2E_GOGLOGLO_PASSWORD ?? '')
+  await page.getByRole('button', { name: 'Iniciar sesión' }).click()
+  await expect(page.getByRole('heading', { name: 'Nuevo test', exact: true })).toBeVisible()
+  await page.getByRole('checkbox', { name: /Tema P10 navegador/ }).check()
+  await page.getByLabel('Número de preguntas').fill('3')
+  const generatedPromise = page.waitForResponse(response => response.url().endsWith('/api/tests/generate') && response.status() === 200)
+  await page.getByRole('button', { name: 'Comenzar test' }).click()
+  const generated: GeneratedTest = await (await generatedPromise).json()
+  await expect(page.getByRole('heading', { name: 'Pregunta 1 de 3' })).toBeVisible()
+  await page.getByRole('radio', { name: /^Opción 1 / }).check()
+  await page.getByRole('button', { name: 'Siguiente', exact: true }).click()
+  await page.getByRole('radio', { name: /^Opción 2 / }).check()
+  await page.getByRole('button', { name: 'Anterior', exact: true }).click()
+  await expect(page.getByRole('radio', { name: /^Opción 1 / })).toBeChecked()
+  page.once('dialog', dialog => dialog.dismiss())
+  await page.getByRole('button', { name: 'Abandonar', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Pregunta 1 de 3' })).toBeVisible()
+  await page.getByRole('button', { name: 'Ir a la pregunta 3, sin contestar' }).click()
+  await page.getByRole('button', { name: 'Finalizar test', exact: true }).click()
+  const dialog = page.getByRole('dialog', { name: '¿Entregar el test?' })
+  await expect(dialog).toContainText('Dejarás 1 pregunta sin contestar.')
+  await expect(page.getByRole('button', { name: 'Seguir revisando' })).toBeFocused()
+  await page.keyboard.press('Escape')
+  await expect(dialog).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Finalizar test', exact: true })).toBeFocused()
+  await page.getByRole('button', { name: 'Revisar y finalizar' }).click()
+  await page.getByRole('button', { name: 'Seguir revisando' }).click()
+  await expect(dialog).toHaveCount(0)
+
+  // PHP commits the first delivery; the browser loses that response and must reuse the same UUID.
+  let committed: FinishedTest | undefined
+  const sent: unknown[] = []
+  await page.route('**/api/tests/finish', async route => {
+    sent.push(route.request().postDataJSON())
+    if (!committed) {
+      const realResponse = await route.fetch()
+      expect(realResponse.status()).toBe(201)
+      committed = await realResponse.json()
+      await route.abort('failed')
+    } else {
+      await new Promise(resolve => setTimeout(resolve, 400))
+      await route.continue()
+    }
+  })
+  await page.getByRole('button', { name: 'Finalizar test', exact: true }).click()
+  await page.getByRole('button', { name: 'Confirmar entrega' }).click()
+  await expect(page.getByRole('alert')).toContainText('Puedes volver a intentarlo sin duplicarlo.')
+  await expect(page.getByRole('heading', { name: 'Pregunta 3 de 3' })).toBeVisible()
+  await page.getByRole('button', { name: 'Finalizar test', exact: true }).click()
+  const retriedPromise = page.waitForResponse(response => response.url().endsWith('/api/tests/finish') && response.status() === 200)
+  await page.getByRole('button', { name: 'Confirmar entrega' }).click()
+  await expect(page.getByRole('button', { name: 'Entregando…' })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Seguir revisando' })).toBeDisabled()
+  const retried = await (await retriedPromise).json()
+  expect(sent).toHaveLength(2)
+  expect(sent[0]).toEqual(sent[1])
+  expect(retried).toEqual(committed)
+  expect(retried).toMatchObject({ correctCount: 1, incorrectCount: 1, unansweredCount: 1, totalQuestions: 3, score: 2.5 })
+  await expect(page).toHaveURL(new RegExp('/attempts/' + retried.attemptId + '$'))
+  await expect(page.getByRole('heading', { name: 'Nota 2.50', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: generated.questions[0].statement, exact: true })).toBeVisible()
+  await expect(page.locator('.result-badge')).toContainText('Acertada')
+  await expect(page.getByText('Tu respuesta', { exact: true })).toHaveCount(1)
+  await expect(page.getByText('Respuesta correcta', { exact: true })).toHaveCount(1)
+  await page.getByRole('button', { name: 'Siguiente', exact: true }).click()
+  await expect(page.getByRole('heading', { name: generated.questions[1].statement, exact: true })).toBeVisible()
+  await expect(page.locator('.result-badge')).toContainText('Fallada')
+  await page.getByRole('button', { name: 'Pregunta 3: Sin contestar', exact: true }).click()
+  await expect(page.getByText('No seleccionaste ninguna respuesta.')).toBeVisible()
+  const originalResponse = await page.request.get('/api/attempts/' + retried.attemptId)
+  const original = await originalResponse.json()
+  expect(original.questions.map((question: { originalQuestionId: number }) => question.originalQuestionId))
+    .toEqual(generated.questions.map(question => question.id))
+
+  // Editing shared content afterwards leaves the completed review unchanged.
+  const csrf = (await page.context().cookies()).find(cookie => cookie.name === 'OPOMATIC_CSRF')!.value
+  const bankResponse = await page.request.get('/api/questions/' + generated.questions[0].id)
+  const bank = await bankResponse.json()
+  bank.statement = 'Texto cambiado después de entregar'
+  bank.options[0].text = 'Opción cambiada después'
+  bank.options.forEach((option: { isCorrect: boolean }, index: number) => { option.isCorrect = index === 1 })
+  expect((await page.request.put('/api/questions/' + generated.questions[0].id, { headers: { 'X-CSRF-Token': csrf }, data: bank })).status()).toBe(200)
+  expect((await page.request.patch('/api/questions/' + generated.questions[0].id + '/status',
+    { headers: { 'X-CSRF-Token': csrf }, data: { isActive: false } })).status()).toBe(204)
+  expect(await (await page.request.get('/api/attempts/' + retried.attemptId)).json()).toEqual(original)
+  await page.reload()
+  await expect(page.getByRole('heading', { name: 'Nota 2.50', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: generated.questions[0].statement, exact: true })).toBeVisible()
+  await expect(page.getByText('Texto cambiado después de entregar', { exact: true })).toHaveCount(0)
+})

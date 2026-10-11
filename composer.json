@@ -6,7 +6,8 @@
   "require": {
     "php": "^8.2",
     "ext-pdo": "*",
-    "ext-pdo_mysql": "*"
+    "ext-pdo_mysql": "*",
+    "ext-openssl": "*"
   },
   "autoload": {
     "psr-4": {
@@ -15,6 +16,8 @@
   },
   "scripts": {
     "serve": "php -S 127.0.0.1:8000 -t backend/public backend/public/router.php",
+    "test:scoring": "php backend/tests/Unit/AttemptScorerTest.php",
+    "test:tokens": "php backend/tests/Unit/TestTokenProtectorTest.php",
     "test:http": "php backend/tests/Integration/HttpKernelTest.php",
     "test:db": "php backend/tests/Integration/DatabaseTest.php",
     "test:bootstrap": "php backend/tests/Integration/BootstrapAccountsTest.php"

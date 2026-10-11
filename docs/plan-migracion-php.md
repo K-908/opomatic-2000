@@ -1,7 +1,7 @@
 # Lista de tareas para migrar OpoMatic-2000 a PHP
 
-Estado: planificación. **P00 está en curso, P01–P05 están completadas y
-P06–P14 están pendientes**. El frontend React y el esquema inicial MySQL ya
+Estado: migración en curso. **P00 está en curso, P01–P10 están completadas y
+P11–P14 están pendientes**. El frontend React y el esquema inicial MySQL ya
 están copiados; PHP responde a `GET /health` y dispone de un núcleo HTTP y
 acceso PDO a MySQL.
 Se parte de una base vacía y no se usará Docker.
@@ -19,12 +19,12 @@ Las dependencias indican qué debe estar operativo antes de cerrar la tarea.
 | P03 | **Acceso MySQL:** completada en MySQL 8.0.46 local. Conexión PDO, consultas preparadas, transacciones, repositorios y comprobación de claves/restricciones de las nueve tablas; copia restaurada en otra base temporal. Falta repetir la compatibilidad en el hosting elegido (P00/P13). | P01 |
 | P04 | **Alta inicial de cuentas:** completada y probada en MySQL local. Comando PHP CLI de una sola ejecución para crear `Gogloglo` y `Virginia` con `password_hash()`, sin contraseñas en Git ni en SQL; una inserción fallida revierte ambas. Su ejecución definitiva queda para el despliegue. | P03 |
 | P05 | **Autenticación:** completada en local. Login, sesión de hasta 12 horas, logout, cookies, CSRF, cinco intentos por IP/minuto y `/auth/accesses` (máximo 50). Probado por HTTP con dos cuentas aisladas. El aislamiento de intentos y estadísticas se comprobará al crear esas rutas en P11/P12. | P02, P04 |
-| P06 | **Temas:** lista, detalle, alta, edición y activación/desactivación con validación y nombres únicos. La pantalla React debe funcionar contra PHP. | P03, P05 |
-| P07 | **Preguntas:** CRUD lógico, filtros, búsqueda, paginación, cuatro opciones y una correcta; escritura transaccional. Probar las pantallas existentes. | P06 |
-| P08 | **Importación JSON:** validar tamaño, cantidad y rutas de error; crear o reutilizar temas y guardar todo o nada. Probar el formulario React. | P07 |
-| P09 | **Generación de tests:** disponibilidad, selección sin repetidos, barajado y token firmado con usuario y caducidad, sin exponer respuestas correctas. | P07, P05 |
-| P10 | **Corrección y entrega:** calcular nota en un único servicio, validar respuestas, guardar snapshots en una transacción y hacer idempotente `submissionId`. Probar `/tests/run`. | P09, P03 |
-| P11 | **Histórico:** lista paginada y detalle reconstruido de snapshots; impedir acceso a intentos de otra cuenta. Probar lista y revisión React. | P10 |
+| P06 | **Temas:** completada localmente. Lista, detalle, alta, edición y estado lógico con validación Unicode, nombres únicos y conteo de preguntas activas. HTTP y Chromium contra PHP/MariaDB verificados, incluida la pantalla React. | P03, P05 |
+| P07 | **Preguntas:** completada localmente. CRUD lógico, filtros, búsqueda literal, paginación, cuatro opciones y una correcta. Escritura transaccional con IDs conservados y rollback probado; snapshots intactos. Lista y formularios React verificados en Chromium contra PHP/MariaDB. | P06 |
+| P08 | **Importación JSON:** completada localmente. Límites de 5 MB y 2.000 preguntas, errores por ruta, temas nuevos/reutilizados y transacción única. Rollback forzado y límites exactos probados; formulario React verificado en Chromium contra PHP/MariaDB. | P07 |
+| P09 | **Generación de tests:** completada localmente. Selección de 1–200 preguntas activas sin repetidos y barajado seguro. Token opaco AES-256-GCM ligado a usuario y doce horas; manipulación, caducidad y cuentas cruzadas probadas. HTTP y Chromium verificados sin exponer respuestas correctas. | P07, P05 |
+| P10 | **Corrección y entrega:** completada localmente. Puntuación exacta en millonésimas, validación de token/respuestas y snapshots atómicos. Idempotencia, carrera y rollback probados; recorrido React hasta el detalle inmutable por cuenta verificado en Chromium. | P09, P03 |
+| P11 | **Histórico:** detalle desde snapshots disponible y aislado desde P10. Pendiente lista paginada; impedir acceso a intentos de otra cuenta. Probar lista y revisión React. | P10 |
 | P12 | **Estadísticas:** resumen y ranking por tema desde snapshots, con casos vacíos y sin divisiones por cero. Probar panel y página React. | P11 |
 | P13 | **Publicación Apache:** compilar React con `VITE_API_BASE_URL=/`, servir `dist`, enviar `/api/*` y `/health` a PHP y las rutas SPA a `index.html`. Mantener `src`, configuración, dependencias y copias fuera del directorio público. | P00, P02, P05 |
 | P14 | **Verificación integral:** comparar todas las rutas y errores con el contrato; ejecutar pruebas PHP/MySQL, lint, Vitest, build y Playwright contra instalación local aislada. Revisar HTTPS, cookies, CSRF, límites, copias y restauración. Registrar evidencia en `auditoria-mvp.md`. | P06–P13 |

@@ -3,7 +3,12 @@ param(
     [int]$Port = 3306,
     [string]$AdminUser = 'root',
     [switch]$BootstrapAccounts,
-    [switch]$Authentication
+    [switch]$Authentication,
+    [switch]$Topics,
+    [switch]$Questions,
+    [switch]$Import,
+    [switch]$Generation,
+    [switch]$Completion
 )
 
 $ErrorActionPreference = 'Stop'
@@ -11,8 +16,8 @@ $ErrorActionPreference = 'Stop'
 if (-not (Test-Path Env:OPOMATIC_DB_ADMIN_PASSWORD)) {
     throw 'Define OPOMATIC_DB_ADMIN_PASSWORD en el proceso antes de ejecutar la prueba.'
 }
-if ($BootstrapAccounts -and $Authentication) {
-    throw 'Ejecuta las pruebas de P04 y P05 en bases temporales distintas.'
+if (@($BootstrapAccounts, $Authentication, $Topics, $Questions, $Import, $Generation, $Completion).Where({ $_ }).Count -gt 1) {
+    throw 'Ejecuta cada modo de prueba en bases temporales distintas.'
 }
 
 $mysqlExe = (Get-Command mysql.exe -ErrorAction Stop).Source
@@ -49,9 +54,9 @@ try {
             composer test:bootstrap
             if ($LASTEXITCODE -ne 0) { throw 'Falló la prueba de alta inicial.' }
         }
-        if ($Authentication) {
-            & (Join-Path $PSScriptRoot 'AuthHttpTest.ps1')
-            if ($LASTEXITCODE -ne 0) { throw 'Falló la prueba HTTP de autenticación.' }
+        if ($Authentication -or $Topics -or $Questions -or $Import -or $Generation -or $Completion) {
+            & (Join-Path $PSScriptRoot 'AuthHttpTest.ps1') -Topics:$Topics -Questions:$Questions -Import:$Import -Generation:$Generation -Completion:$Completion
+            if ($LASTEXITCODE -ne 0) { throw 'Falló la prueba HTTP o de navegador.' }
         }
     } finally {
         Pop-Location

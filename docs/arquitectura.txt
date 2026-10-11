@@ -19,17 +19,19 @@ Navegador -> HTTPS/Apache -> React estático y /api -> PHP -> PDO -> MySQL
   de la SPA necesitan fallback a `index.html` al refrescar.
 - `backend/public/`: contiene el punto de entrada PHP y router de desarrollo.
   `/health` ya responde; la infraestructura enruta rutas `/api/*`, cuyos
-  controladores funcionales siguen pendientes.
+  controladores de autenticación, temas, preguntas, importación, generación, entrega y detalle de intento ya están implementados.
 - `backend/src/Http/`: enrutamiento, lectura de JSON, respuestas, Problem
-  Details y rutas de autenticación preparados; validaciones de negocio pendientes.
+  Details y rutas de autenticación, temas, preguntas, importación, generación, entrega y detalle de intento implementados.
 - `backend/src/Application/`: casos de uso de temas, preguntas, importación,
   generación, entrega, historial, estadísticas y cuentas.
 - `backend/src/Domain/`: reglas puras, incluida la puntuación en un solo lugar.
 - `backend/src/Infrastructure/`: conexión PDO, repositorios iniciales,
-  transacciones, sesiones PHP, cookies y límite de login implementados; tokens
-  de test pendientes.
+  transacciones, sesiones PHP, cookies, límite de login y tokens
+  temporales de test AES-256-GCM implementados.
 - `backend/tests/`: pruebas de núcleo HTTP y acceso MySQL implementadas;
-  pruebas funcionales pendientes.
+  pruebas HTTP de autenticación, banco, generación, entrega y detalle;
+  pruebas de tokens/puntuación y recorridos Chromium de banco, generación
+  y entrega con revisión implementados. Carreras y rollback real verificados.
 - `database/schema.sql`: esquema inicial para importar en una base vacía.
 
 En producción, React y PHP deben compartir el mismo origen para que la cookie
@@ -55,9 +57,16 @@ cookie separada para cambios de estado. Los intentos de login se limitan a
 cinco por IP y minuto y los mensajes no revelan si existe la cuenta. Las
 sesiones y el limitador se guardan en un directorio privado escribible.
 
-El token temporal de un test debe estar firmado o autenticado, incluir usuario
-y caducidad, y no revelar las respuestas correctas. La entrega se verifica en
-servidor y se guarda transaccionalmente. `submissionId` impide duplicados.
+El token temporal de test está cifrado y autenticado con AES-256-GCM;
+incluye usuario, IDs y orden de preguntas/opciones, emisión y caducidad de
+doce horas. APP_KEY exige un secreto privado aleatorio de al menos 32 bytes;
+HKDF-SHA256 deriva la clave con propósito exclusivo y cada token tiene un
+nonce aleatorio. No contiene respuestas correctas. El verificador rechaza
+alteración, caducidad y cuentas cruzadas. La entrega P10 verifica el contenido
+en servidor y guarda intento y snapshots transaccionalmente. submissionId
+impide duplicados; una carrera recupera el resultado ganador después del
+rollback. La repetición se compara con snapshots, sin volver a corregir.
+El detalle filtra por usuario y devuelve 404 para un intento ajeno.
 
 Las credenciales MySQL y la clave de firma se configuran fuera de Git. Nunca
 deben publicarse `src/`, `vendor/`, `.env` ni copias de seguridad. La forma de
@@ -71,6 +80,8 @@ Las fechas se guardan en UTC. Las importaciones y entregas usan transacciones.
 Los intentos guardan snapshots de temas, preguntas y opciones para preservar
 el histórico. La nota `Score` se guarda como entero en millonésimas, conforme
 al esquema, y se convierte al formato del contrato HTTP en el backend.
+AttemptScorer aplica aritmética racional entera, sin redondeos intermedios;
+redondea solo la nota final a millonésimas, mitades alejándose de cero.
 
 Las modificaciones futuras del esquema se versionarán con scripts incrementales
 y una guía de aplicación; `schema.sql` representa la instalación inicial.

@@ -6,7 +6,8 @@ MYSQL; ESQUEMA INICIAL EN ../database/schema.sql
 Se parte de una base vacía. El archivo SQL crea nueve tablas en MySQL 8.0.16+
 con InnoDB y utf8mb4. Fue importado y probado en MySQL 8.0.46. Este documento
 describe el objetivo del backend PHP, cuya capa de acceso PDO ya está
-implementada. Los endpoints funcionales siguen pendientes. No se importan
+implementada. Banco, importación, generación, entrega y detalle de intento
+están implementados; listado y estadísticas siguen pendientes. No se importan
 filas de SQL Server ni de SQLite.
 
 2. CATÁLOGO Y RELACIONES
@@ -24,6 +25,8 @@ filas de SQL Server ni de SQLite.
   dentro de una transacción; el esquema impide posiciones duplicadas.
 - TestAttempts: entrega con `SubmissionId` único, usuario, fecha, contadores,
   nota y versión de puntuación. El `Score` es BIGINT en millonésimas de punto.
+  P10 lo calcula con aritmética racional entera y un único redondeo final
+  a millonésimas (mitades alejándose de cero); regla 1.
 - TestAttemptTopics: temas elegidos y nombre capturado al entregar.
 - TestAttemptQuestions: preguntas, orden, texto, tema y resultado capturados.
 - TestAttemptOptions: opciones, orden, texto, selección y corrección capturados.
@@ -38,7 +41,11 @@ Claves foráneas, unicidad e índices están en `schema.sql`. Los CHECK validan
 posición, contadores, rango de nota y resultado. La regla de una única opción
 correcta por pregunta, separación de usuarios y consistencia del token
 requieren validación del backend. La importación JSON y la entrega del test
-deben confirmar o revertir todas sus filas como una sola operación.
+confirman o revierten todas sus filas como una sola operación, verificadas
+con fallos forzados. P10 verifica también carreras de SubmissionId en MariaDB;
+tras rollback lee el intento ganador y comprueba compatibilidad por cuenta,
+preguntas, orden de opciones y respuestas, sin corregir de nuevo el banco.
+El detalle lee exclusivamente snapshots y filtra por usuario.
 
 Los nombres de tema se normalizan antes de guardar. La comparación sin
 mayúsculas depende de la colación `utf8mb4_unicode_ci`; hay que verificar el

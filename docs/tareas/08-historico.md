@@ -1,6 +1,8 @@
 # 08. Histórico y revisión
 
-Estado: pendiente.
+Estado: pendiente (P11). El detalle desde snapshots y su aislamiento se
+implementaron y probaron en P10 para completar la entrega de React.
+Quedan el listado/paginación y sus recorridos de integración.
 
 ## T070 - Consultas por cuenta
 

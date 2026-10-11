@@ -11,6 +11,7 @@ final class HttpProblem extends RuntimeException
     /**
      * @param array<string, string> $headers
      * @param array<string, list<string>> $errors
+     * @param array<string, mixed> $extensions
      */
     public function __construct(
         public readonly int $status,
@@ -19,6 +20,7 @@ final class HttpProblem extends RuntimeException
         public readonly string $type = 'about:blank',
         public readonly array $headers = [],
         public readonly array $errors = [],
+        public readonly array $extensions = [],
     ) {
         parent::__construct($detail);
     }
