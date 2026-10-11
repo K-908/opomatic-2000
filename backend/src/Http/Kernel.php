@@ -10,13 +10,17 @@ use Throwable;
 final readonly class Kernel
 {
     /** @param null|Closure(string): void $logger */
-    public function __construct(private Router $router, private ?Closure $logger = null)
+    /** @param null|Closure(Request): void $beforeDispatch */
+    public function __construct(private Router $router, private ?Closure $logger = null, private ?Closure $beforeDispatch = null)
     {
     }
 
     public function handle(Request $request): Response
     {
         try {
+            if ($this->beforeDispatch !== null) {
+                ($this->beforeDispatch)($request);
+            }
             return $this->router->dispatch($request);
         } catch (HttpProblem $problem) {
             return Response::problem($problem, $request->path);

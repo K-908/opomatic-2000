@@ -4,7 +4,7 @@ Estas tareas describen trabajo **pendiente** en PHP/MySQL. Conservan las áreas
 funcionales del repositorio de origen, pero ninguna tarea de .NET se considera
 automáticamente completada aquí. La estructura y documentación iniciales se
 prepararon antes de comenzar los bloques de implementación. La tarea P00 de
-inventario está en curso; las demás siguen pendientes.
+inventario está en curso; P01–P05 están completadas en el entorno local.
 
 El orden concreto de trabajo, dependencias y comprobaciones transversales se
 resume en [`../plan-migracion-php.md`](../plan-migracion-php.md).
@@ -13,8 +13,8 @@ resume en [`../plan-migracion-php.md`](../plan-migracion-php.md).
 |---:|---|---|---|
 | 0 | Entorno y hosting | [00-entorno-hosting.md](00-entorno-hosting.md) | En curso (local verificado) |
 | 1 | Base técnica y API | [01-fundamentos.md](01-fundamentos.md) | Completado (2/2) |
-| 2 | MySQL y acceso PDO | [02-base-datos.md](02-base-datos.md) | Pendiente |
-| 3 | Cuentas y sesiones | [11-autenticacion.md](11-autenticacion.md) | Pendiente |
+| 2 | MySQL y acceso PDO | [02-base-datos.md](02-base-datos.md) | Completado localmente; pendiente validar hosting |
+| 3 | Cuentas y sesiones | [11-autenticacion.md](11-autenticacion.md) | Alta y autenticación completas localmente; aislamiento de futuras rutas pendiente |
 | 4 | Temas | [03-temas.md](03-temas.md) | Pendiente |
 | 5 | Preguntas | [04-preguntas.md](04-preguntas.md) | Pendiente |
 | 6 | Importación JSON | [05-importacion-json.md](05-importacion-json.md) | Pendiente |

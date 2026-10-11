@@ -12,7 +12,7 @@
 | Esquema | `database/schema.sql` creó 9 tablas, 10 claves foráneas y 10 `CHECK` en base temporal |
 | Integridad | PDO confirmó inserción relacionada, rechazo de FK y CHECK, y rollback |
 | Límites PHP CLI | `post_max_size=40M`, `memory_limit=512M`, `max_execution_time=0` |
-| Sesiones PHP CLI | `session.gc_maxlifetime=1440` segundos; deberá configurarse para la sesión prevista de 12 horas o usar otro almacén |
+| Sesiones PHP CLI | Valor predeterminado `session.gc_maxlifetime=1440` segundos; la API lo ajusta a 12 horas y usa un directorio privado para sus sesiones |
 
 La base temporal se eliminó tras la prueba. No se escribieron contraseñas en
 este archivo. Las versiones locales no prueban que un futuro hosting tenga las
@@ -36,8 +36,9 @@ Los límites de PHP CLI tampoco garantizan los valores de Apache o del hosting.
    directorio público.
 4. HTTPS válido para usar cookies `Secure`, y un lugar fuera del directorio
    público para configuración, código PHP privado, dependencias y copias. La
-   cuenta del servidor debe poder usar almacenamiento de sesiones o una opción
-   equivalente que soporte la duración prevista.
+   cuenta del servidor debe poder escribir en `AUTH_STORAGE_DIR` para sesiones
+   y límite de login. PHP debe recibir la marca HTTPS de Apache; la sesión
+   usa caducidad absoluta de doce horas y el login de producción rechaza HTTP.
 5. Un límite de peticiones suficiente para el JSON de importación de hasta
    5 MB. React envía JSON en el cuerpo de `POST`, así que debe comprobarse
    `post_max_size` y cualquier límite HTTP del proveedor; `upload_max_filesize`
@@ -52,6 +53,7 @@ No se ha elegido uno todavía. Al seleccionarlo, registrar aquí:
 - Extensiones PHP activas, límites de POST, memoria y tiempo de ejecución.
 - Directorio público real y posibilidad de mantener archivos privados fuera.
 - Reglas de reescritura admitidas, HTTPS y gestión de certificados.
+- Ruta privada escribible para `AUTH_STORAGE_DIR` y detección HTTPS en PHP.
 - Resultado de importar `database/schema.sql` en una base vacía y de probar una
   inserción con restricciones y rollback.
 

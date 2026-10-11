@@ -15,18 +15,18 @@ final readonly class Response
     }
 
     /** @param array<string, mixed> $payload */
-    public static function json(array $payload, int $status = 200): self
+    public static function json(array $payload, int $status = 200, array $headers = []): self
     {
         return new self(
             $status,
-            ['Content-Type' => 'application/json; charset=utf-8'],
+            ['Content-Type' => 'application/json; charset=utf-8', ...$headers],
             json_encode($payload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE),
         );
     }
 
-    public static function noContent(): self
+    public static function noContent(array $headers = []): self
     {
-        return new self(204, [], '');
+        return new self(204, $headers, '');
     }
 
     public static function problem(HttpProblem $problem, string $instance, ?string $traceId = null): self

@@ -7,8 +7,11 @@ Preparación documental y estructura inicial en curso: frontend copiado,
 esquema MySQL importable y carpetas PHP creadas. P00 ha verificado PHP, PDO y
 MySQL locales; queda comprobar un hosting concreto cuando se elija. P01 ya
 dispone de Composer, autoload y `GET /health`; P02 añade enrutamiento, JSON y
-Problem Details. Los endpoints funcionales PHP están pendientes. No se heredan
-las marcas de tareas terminadas
+Problem Details. P03 añade conexión PDO, repositorios y transacciones,
+comprobados con MySQL 8.0.46 local y restauración de una copia. P04 añade el
+alta inicial transaccional y de una sola ejecución de las dos cuentas. P05
+implementa y prueba por HTTP login, sesiones, CSRF, logout y accesos. Las rutas
+de temas, preguntas y tests siguen pendientes. No se heredan las marcas de tareas terminadas
 del repositorio OpoMatic-3000.
 
 1. BASE TÉCNICA
@@ -42,7 +45,7 @@ Agregar métricas desde snapshots. Ejecutar pruebas de backend y frontend,
 recorrido E2E y comprobaciones de seguridad. Preparar una publicación en
 hosting compartido con HTTPS, copia de seguridad y restauración ensayada.
 
-Cada bloque se divide en las tareas pendientes de `docs/tareas/README.md`.
+Cada bloque se divide en las tareas de `docs/tareas/README.md`.
 Solo se marca terminado tras implementar y verificar el comportamiento PHP.
 
 La lista ejecutable, con dependencias y criterios comunes de cierre, está en

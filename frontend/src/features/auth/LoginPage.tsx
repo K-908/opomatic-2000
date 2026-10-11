@@ -23,8 +23,10 @@ export function LoginPage({ onAuthenticated }: { onAuthenticated: (session: Auth
     } catch (cause) {
       if (cause instanceof ApiError && cause.status === 429) {
         setError('Demasiados intentos. Espera un minuto antes de volver a probar.')
-      } else {
+      } else if (cause instanceof ApiError && cause.status === 401) {
         setError('Usuario o contraseña incorrectos.')
+      } else {
+        setError('No se ha podido completar el acceso. Inténtalo de nuevo.')
       }
     } finally {
       setSubmitting(false)

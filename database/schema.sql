@@ -1,4 +1,4 @@
--- Schema for a future PHP port. Import into an empty MySQL 8.0.16+ or MariaDB 10.4+ database.
+-- Initial schema for the PHP port. Import into an empty MySQL 8.0.16+ or MariaDB 10.4+ database.
 -- This does not work with the current ASP.NET API, which uses SQLite.
 -- Timestamps are UTC; Score stores millionths of a point.
 -- The PHP backend must insert password_hash() results into Users.PasswordHash.

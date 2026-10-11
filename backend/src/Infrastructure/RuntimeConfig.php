@@ -31,4 +31,10 @@ final readonly class RuntimeConfig
     {
         return $this->environment === 'production';
     }
+
+    public static function requestIsHttps(): bool
+    {
+        $https = strtolower((string) ($_SERVER['HTTPS'] ?? ''));
+        return in_array($https, ['on', '1', 'true'], true) || (string) ($_SERVER['SERVER_PORT'] ?? '') === '443';
+    }
 }

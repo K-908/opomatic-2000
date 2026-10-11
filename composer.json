@@ -4,7 +4,9 @@
   "type": "project",
   "license": "proprietary",
   "require": {
-    "php": "^8.2"
+    "php": "^8.2",
+    "ext-pdo": "*",
+    "ext-pdo_mysql": "*"
   },
   "autoload": {
     "psr-4": {
@@ -13,6 +15,8 @@
   },
   "scripts": {
     "serve": "php -S 127.0.0.1:8000 -t backend/public backend/public/router.php",
-    "test:http": "php backend/tests/Integration/HttpKernelTest.php"
+    "test:http": "php backend/tests/Integration/HttpKernelTest.php",
+    "test:db": "php backend/tests/Integration/DatabaseTest.php",
+    "test:bootstrap": "php backend/tests/Integration/BootstrapAccountsTest.php"
   }
 }

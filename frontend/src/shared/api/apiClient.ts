@@ -42,6 +42,15 @@ export async function apiRequest<T>(
     headers.set('Content-Type', 'application/json')
   }
 
+  const method = (requestOptions.method ?? 'GET').toUpperCase()
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(method) && path !== '/api/auth/login') {
+    const csrfToken = document.cookie
+      .split('; ')
+      .find((cookie) => cookie.startsWith('OPOMATIC_CSRF='))
+      ?.slice('OPOMATIC_CSRF='.length)
+    if (csrfToken) headers.set('X-CSRF-Token', decodeURIComponent(csrfToken))
+  }
+
   const response = await fetch(buildUrl(path), {
     ...requestOptions,
     credentials: 'include',

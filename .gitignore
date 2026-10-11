@@ -8,6 +8,7 @@
 !/backend/.env.example
 /backend/coverage/
 /backend/.phpunit.cache/
+/backend/var/
 *.log
 
 # Frontend

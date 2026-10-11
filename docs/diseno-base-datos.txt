@@ -5,13 +5,15 @@ MYSQL; ESQUEMA INICIAL EN ../database/schema.sql
 
 Se parte de una base vacía. El archivo SQL crea nueve tablas en MySQL 8.0.16+
 con InnoDB y utf8mb4. Fue importado y probado en MySQL 8.0.46. Este documento
-describe el objetivo del backend PHP, que aún no está implementado. No se
-importan filas de SQL Server ni de SQLite.
+describe el objetivo del backend PHP, cuya capa de acceso PDO ya está
+implementada. Los endpoints funcionales siguen pendientes. No se importan
+filas de SQL Server ni de SQLite.
 
 2. CATÁLOGO Y RELACIONES
 
 - Users: `Username` (clave), `PasswordHash`. Solo las cuentas cerradas del
-  producto; no hay registro público. El hash se crea con `password_hash()`.
+  producto; no hay registro público. El alta inicial crea los hashes con
+  `password_hash()` en una transacción y se niega a repetirse si ya hay cuentas.
 - LoginAccesses: acceso correcto, usuario, fecha UTC e IP observada. El diseño
   conserva el nombre de usuario aunque la cuenta se modifique más adelante.
 - Topics: nombre único, estado activo y fechas de creación/actualización.
@@ -46,8 +48,12 @@ su capitalización al escribir consultas.
 
 4. CONFIGURACIÓN Y COPIAS
 
-PDO recibe host, puerto, base, usuario y contraseña desde una configuración no
-versionada. No se expondrán errores de conexión ni secretos al navegador.
+PDO recibe host, puerto, base, usuario y contraseña desde variables de entorno
+del proceso. La conexión usa utf8mb4, preparación nativa y excepciones; el
+error de conexión se reemplaza por uno sin detalles del driver. Los
+repositorios de usuarios y temas contienen consultas parametrizadas, y un
+gestor ejecuta cada operación compuesta en una transacción. No se expondrán
+errores de conexión ni secretos al navegador.
 phpMyAdmin permite importar el esquema y exportar copias SQL. Las copias deben
 guardarse fuera del directorio público y probarse mediante restauración en una
 base separada.

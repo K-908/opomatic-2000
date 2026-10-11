@@ -1,8 +1,9 @@
 # Lista de tareas para migrar OpoMatic-2000 a PHP
 
-Estado: planificación. **P00 está en curso, P01–P02 están completadas y
-P03–P14 están pendientes**. El frontend React y el esquema inicial MySQL ya
-están copiados; PHP responde a `GET /health` y dispone de un núcleo HTTP.
+Estado: planificación. **P00 está en curso, P01–P05 están completadas y
+P06–P14 están pendientes**. El frontend React y el esquema inicial MySQL ya
+están copiados; PHP responde a `GET /health` y dispone de un núcleo HTTP y
+acceso PDO a MySQL.
 Se parte de una base vacía y no se usará Docker.
 
 El objetivo es conservar las rutas, los cuerpos JSON y el comportamiento de
@@ -15,9 +16,9 @@ Las dependencias indican qué debe estar operativo antes de cerrar la tarea.
 | P00 | **Inventariar entorno:** comprobación local terminada y requisitos anotados en `entorno-hosting.md`; queda verificar el proveedor elegido e importar allí el esquema en una base de prueba. Estado: en curso. | — |
 | P01 | **Arranque PHP:** `composer.json`, autoload, configuración local no versionada, front controller y `GET /health`. Completada: responde JSON desde PHP sin Docker. | — |
 | P02 | **Capa HTTP:** completada; router preparado para `/api`, lectura y validación básica de JSON, estados HTTP y `application/problem+json`. Probados 400, 404, 405 y errores inesperados. | P01 |
-| P03 | **Acceso MySQL:** conexión PDO, consultas preparadas, transacciones, repositorios y comprobación de claves/restricciones de las nueve tablas. | P01 |
-| P04 | **Alta inicial de cuentas:** proceso ejecutable una sola vez para crear `Gogloglo` y `Virginia` con `password_hash()`, sin contraseñas en Git ni en SQL. | P03 |
-| P05 | **Autenticación:** login, sesión de hasta 12 horas, logout, cookies seguras, CSRF, límite de intentos, registro de fecha/IP y `/auth/accesses`. Pruebas de aislamiento entre cuentas. | P02, P04 |
+| P03 | **Acceso MySQL:** completada en MySQL 8.0.46 local. Conexión PDO, consultas preparadas, transacciones, repositorios y comprobación de claves/restricciones de las nueve tablas; copia restaurada en otra base temporal. Falta repetir la compatibilidad en el hosting elegido (P00/P13). | P01 |
+| P04 | **Alta inicial de cuentas:** completada y probada en MySQL local. Comando PHP CLI de una sola ejecución para crear `Gogloglo` y `Virginia` con `password_hash()`, sin contraseñas en Git ni en SQL; una inserción fallida revierte ambas. Su ejecución definitiva queda para el despliegue. | P03 |
+| P05 | **Autenticación:** completada en local. Login, sesión de hasta 12 horas, logout, cookies, CSRF, cinco intentos por IP/minuto y `/auth/accesses` (máximo 50). Probado por HTTP con dos cuentas aisladas. El aislamiento de intentos y estadísticas se comprobará al crear esas rutas en P11/P12. | P02, P04 |
 | P06 | **Temas:** lista, detalle, alta, edición y activación/desactivación con validación y nombres únicos. La pantalla React debe funcionar contra PHP. | P03, P05 |
 | P07 | **Preguntas:** CRUD lógico, filtros, búsqueda, paginación, cuatro opciones y una correcta; escritura transaccional. Probar las pantallas existentes. | P06 |
 | P08 | **Importación JSON:** validar tamaño, cantidad y rutas de error; crear o reutilizar temas y guardar todo o nada. Probar el formulario React. | P07 |

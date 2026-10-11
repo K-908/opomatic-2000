@@ -71,4 +71,16 @@ describe('apiRequest', () => {
 
     await expect(apiRequest<void>('/api/topics/1/status')).resolves.toBeUndefined()
   })
+
+  it('sends the session CSRF token on a state-changing request', async () => {
+    document.cookie = 'OPOMATIC_CSRF=token-de-prueba; path=/'
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await apiRequest<void>('/api/auth/logout', { method: 'POST' })
+
+    const options = fetchMock.mock.calls[0][1] as RequestInit
+    expect(new Headers(options.headers).get('X-CSRF-Token')).toBe('token-de-prueba')
+    document.cookie = 'OPOMATIC_CSRF=; Max-Age=0; path=/'
+  })
 })

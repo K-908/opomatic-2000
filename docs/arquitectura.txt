@@ -1,5 +1,5 @@
 ARQUITECTURA TÉCNICA DE OPOMATIC-2000
-OBJETIVO DE LA MIGRACIÓN; NÚCLEO HTTP IMPLEMENTADO
+OBJETIVO DE LA MIGRACIÓN; NÚCLEO HTTP Y ACCESO MYSQL IMPLEMENTADOS
 
 1. PROPÓSITO
 
@@ -20,13 +20,16 @@ Navegador -> HTTPS/Apache -> React estático y /api -> PHP -> PDO -> MySQL
 - `backend/public/`: contiene el punto de entrada PHP y router de desarrollo.
   `/health` ya responde; la infraestructura enruta rutas `/api/*`, cuyos
   controladores funcionales siguen pendientes.
-- `backend/src/Http/`: enrutamiento, lectura de JSON, respuestas y Problem
-  Details ya preparados; autenticación y validaciones de negocio pendientes.
+- `backend/src/Http/`: enrutamiento, lectura de JSON, respuestas, Problem
+  Details y rutas de autenticación preparados; validaciones de negocio pendientes.
 - `backend/src/Application/`: casos de uso de temas, preguntas, importación,
   generación, entrega, historial, estadísticas y cuentas.
 - `backend/src/Domain/`: reglas puras, incluida la puntuación en un solo lugar.
-- `backend/src/Infrastructure/`: PDO, consultas MySQL, cookies y tokens.
-- `backend/tests/`: pruebas unitarias e integración por implementar.
+- `backend/src/Infrastructure/`: conexión PDO, repositorios iniciales,
+  transacciones, sesiones PHP, cookies y límite de login implementados; tokens
+  de test pendientes.
+- `backend/tests/`: pruebas de núcleo HTTP y acceso MySQL implementadas;
+  pruebas funcionales pendientes.
 - `database/schema.sql`: esquema inicial para importar en una base vacía.
 
 En producción, React y PHP deben compartir el mismo origen para que la cookie
@@ -43,10 +46,14 @@ Toda entrada se valida en PHP. Los contratos de red se separan de las tablas.
 Las cuentas `Gogloglo` y `Virginia` se guardarán en `Users`, con hashes creados
 por `password_hash()` y verificados por `password_verify()`. Los hashes .NET
 anteriores no se reutilizan porque se parte de una base vacía. El alta inicial
-debe ser una operación explícita y segura; el esquema no contiene contraseñas.
-Las sesiones usarán cookies HttpOnly, Secure en HTTPS y SameSite adecuado.
-Las solicitudes que cambian estado deberán protegerse frente a CSRF. Los
-intentos de login se limitarán y los mensajes no revelarán si existe la cuenta.
+ya dispone de un comando PHP CLI explícito y transaccional que rechaza una
+segunda ejecución; el esquema no contiene contraseñas. Falta ejecutar el
+comando con las contraseñas definitivas en el hosting.
+Las sesiones usan cookies HttpOnly, Secure en HTTPS y SameSite=Lax, con
+caducidad absoluta de doce horas. React envía `X-CSRF-Token` leído de una
+cookie separada para cambios de estado. Los intentos de login se limitan a
+cinco por IP y minuto y los mensajes no revelan si existe la cuenta. Las
+sesiones y el limitador se guardan en un directorio privado escribible.
 
 El token temporal de un test debe estar firmado o autenticado, incluir usuario
 y caducidad, y no revelar las respuestas correctas. La entrega se verifica en

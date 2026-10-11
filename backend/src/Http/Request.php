@@ -19,7 +19,7 @@ final readonly class Request
     private array $headers;
 
     /** @param array<string, string> $headers */
-    public function __construct(string $method, string $uri, public string $body = '', array $headers = [])
+    public function __construct(string $method, string $uri, public string $body = '', array $headers = [], public string $remoteIp = '127.0.0.1')
     {
         $this->method = strtoupper($method);
         $path = parse_url($uri, PHP_URL_PATH);
@@ -62,6 +62,7 @@ final readonly class Request
             (string) ($_SERVER['REQUEST_URI'] ?? '/'),
             $body,
             $headers,
+            (string) ($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0'),
         );
     }
 

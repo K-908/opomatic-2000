@@ -14,12 +14,14 @@ import { StatisticsPage } from './features/statistics/StatisticsPage'
 import { LoginPage } from './features/auth/LoginPage'
 import { AccessHistoryPage } from './features/auth/AccessHistoryPage'
 import { getSession, logout, type AuthSession } from './features/auth/api/authApi'
+import { ApiError } from './shared/api/apiClient'
 import './App.css'
 
 function App() {
   const [path, setPath] = useState(window.location.pathname)
   const [auth, setAuth] = useState<{ status: 'loading' } | { status: 'anonymous' } | { status: 'authenticated'; session: AuthSession }>({ status: 'loading' })
   const [loggingOut, setLoggingOut] = useState(false)
+  const [logoutError, setLogoutError] = useState(false)
   const { generatedTest, startTest, clearTest } = useTestSession()
 
   useEffect(() => {
@@ -86,15 +88,23 @@ function App() {
         !window.confirm('¿Cerrar sesión? Perderás todo el progreso del test.')) return
 
     setLoggingOut(true)
+    setLogoutError(false)
     try {
       await logout()
-      clearTest()
-      window.history.replaceState(null, '', '/')
-      setPath('/')
-      setAuth({ status: 'anonymous' })
+      finishLogout()
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) finishLogout()
+      else setLogoutError(true)
     } finally {
       setLoggingOut(false)
     }
+  }
+
+  function finishLogout() {
+    clearTest()
+    window.history.replaceState(null, '', '/')
+    setPath('/')
+    setAuth({ status: 'anonymous' })
   }
 
   if (auth.status === 'loading') return <main className="auth-loading" aria-label="Comprobando sesión" />
@@ -138,6 +148,7 @@ function App() {
             <a href="/accesses">Accesos</a>
             <span>{auth.session.username}</span>
             <button type="button" onClick={signOut} disabled={loggingOut}>{loggingOut ? 'Saliendo…' : 'Cerrar sesión'}</button>
+            {logoutError && <span role="alert">No se pudo cerrar la sesión. Inténtalo de nuevo.</span>}
             <a className="site-home-link" href="/" onClick={goHome} aria-current={path === '/' ? 'page' : undefined}>Inicio</a>
           </nav>
         </div>

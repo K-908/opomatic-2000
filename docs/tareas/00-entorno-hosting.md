@@ -12,7 +12,8 @@ el proveedor concreto cuando se elija.
 - Servicio MySQL80 activo, MySQL 8.0.46. PHP conecta por PDO a `127.0.0.1:3306`.
 - PHP CLI admite `post_max_size=40M`; su `session.gc_maxlifetime` actual es
   1.440 segundos, inferior a las doce horas deseadas y debe configurarse en
-  el futuro backend o sustituirse por otro almacén de sesión.
+  el backend; P05 lo ajusta a 12 horas y usa un directorio privado, pendiente
+  de verificar en el hosting elegido.
 - `database/schema.sql` importado en base aislada: nueve tablas, diez claves
   foráneas y diez restricciones `CHECK` registradas.
 - PDO insertó filas relacionadas, rechazó una clave foránea inválida y un

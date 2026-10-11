@@ -5,9 +5,10 @@ CONTRATO OBJETIVO PARA LA MIGRACIÓN A PHP
 1. OBJETIVO
 
 Este documento conserva el contrato que espera el frontend React. La API PHP
-deberá implementarlo y se documentará en OpenAPI al programarla. Por ahora solo
-`GET /health` existe; las demás rutas funcionales describen comportamiento
-objetivo. El enrutamiento y los errores HTTP básicos también están implementados.
+deberá implementarlo y se documentará en OpenAPI al programarla. Por ahora
+existen `GET /health` y las cuatro rutas de autenticación; las demás rutas
+funcionales describen comportamiento objetivo. El enrutamiento y los errores
+HTTP básicos también están implementados.
 
 En producción la API se sirve bajo `/api` en el mismo origen que React. En
 desarrollo podrá usarse el proxy de Vite hacia el servidor PHP local.
@@ -57,6 +58,7 @@ Ejemplo:
 Códigos habituales:
 
 - 401 Unauthorized: sesión ausente o credenciales incorrectas.
+- 403 Forbidden: token CSRF ausente o inválido, o intento de login sin HTTPS en producción.
 - 429 Too Many Requests: demasiados intentos de login en un minuto.
 - 400 Bad Request: formato o validación incorrectos.
 - 404 Not Found: recurso inexistente.
@@ -596,3 +598,11 @@ minuto.
 
 `GET /auth/accesses` devuelve como máximo los 50 accesos correctos más recientes
 de la cuenta autenticada, con `accessedAtUtc` e `ipAddress`.
+
+Las sesiones tienen caducidad absoluta de doce horas. La cookie
+`OPOMATICSESSID` es HttpOnly, SameSite=Lax y Secure en HTTPS. El servidor
+entrega `OPOMATIC_CSRF` al iniciar o recuperar una sesión; React la lee y
+envía su valor en `X-CSRF-Token` para métodos que cambian estado, incluido
+`POST /auth/logout`. `POST /auth/login` queda exento. Un token inválido
+devuelve 403. El límite de cinco intentos por IP se aplica a una ventana
+móvil de sesenta segundos; el sexto devuelve 429 con `Retry-After: 60`.
