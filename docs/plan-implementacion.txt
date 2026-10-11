@@ -11,7 +11,7 @@ Problem Details. P03 añade conexión PDO, repositorios y transacciones,
 comprobados con MySQL 8.0.46 local y restauración de una copia. P04 añade el
 alta inicial transaccional y de una sola ejecución de las dos cuentas. P05
 implementa y prueba por HTTP login, sesiones, CSRF, logout y accesos. Las rutas
-de temas, preguntas e importación JSON están implementadas y probadas por HTTP y Chromium (P06–P08); generación de tests implementada y probada (P09); entrega, corrección y detalle desde snapshots implementados y probados (P10); listado del histórico pendiente (P11). No se heredan las marcas de tareas terminadas
+de temas, preguntas e importación JSON están implementadas y probadas por HTTP y Chromium (P06–P08); generación de tests implementada y probada (P09); entrega, corrección y detalle desde snapshots implementados y probados (P10); listado paginado del histórico y estadísticas implementados y probados (P11–P12). No se heredan las marcas de tareas terminadas
 del repositorio OpoMatic-3000.
 
 1. BASE TÉCNICA
@@ -38,11 +38,13 @@ contratos de `docs/diseno-api.txt` para reutilizar React.
 Disponibilidad, selección aleatoria y barajado implementados en P09 con token temporal
 autenticado ligado a usuario y caducidad de doce horas. P10 implementa
 corrección exacta en un único lugar, entrega idempotente, snapshots atómicos
-y detalle inmutable por cuenta. Añadir el histórico paginado en P11.
+y detalle inmutable por cuenta. P11 completa el histórico paginado, sus estados
+de interfaz y el aislamiento por cuenta, verificados por HTTP y Chromium.
 
 5. ESTADÍSTICAS Y PUBLICACIÓN
 
-Agregar métricas desde snapshots. Ejecutar pruebas de backend y frontend,
+P12 completa métricas desde snapshots y ranking; vacíos, blancos, empates y
+aislación por cuenta están verificados. Ejecutar el cierre integral de backend y frontend,
 recorrido E2E y comprobaciones de seguridad. Preparar una publicación en
 hosting compartido con HTTPS, copia de seguridad y restauración ensayada.
 

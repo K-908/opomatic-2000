@@ -28,6 +28,32 @@ final readonly class TestAttemptRepository
         return $row === false ? null : $this->snapshots($row);
     }
 
+    public function listOwned(string $username, int $page, int $pageSize): array
+    {
+        $count = $this->connection->prepare('SELECT COUNT(*) FROM TestAttempts WHERE Username = ?');
+        $count->execute([$username]);
+        $total = (int) $count->fetchColumn();
+        $query = $this->connection->prepare('SELECT * FROM TestAttempts WHERE Username = ?
+            ORDER BY CompletedAtUtc DESC, Id DESC LIMIT ? OFFSET ?');
+        $query->bindValue(1, $username);
+        $query->bindValue(2, $pageSize, PDO::PARAM_INT);
+        $query->bindValue(3, ($page - 1) * $pageSize, PDO::PARAM_INT);
+        $query->execute();
+        $rows = $query->fetchAll();
+        if ($rows !== []) {
+            $ids = array_column($rows, 'Id');
+            $topics = $this->connection->prepare('SELECT TestAttemptId, OriginalTopicId, TopicNameSnapshot
+                FROM TestAttemptTopics WHERE TestAttemptId IN (' . implode(',', array_fill(0, count($ids), '?')) . ')
+                ORDER BY OriginalTopicId');
+            $topics->execute($ids);
+            $byAttempt = [];
+            foreach ($topics->fetchAll() as $topic) { $byAttempt[$topic['TestAttemptId']][] = $topic; }
+            foreach ($rows as &$row) { $row['Topics'] = $byAttempt[$row['Id']] ?? []; }
+            unset($row);
+        }
+        return ['rows' => $rows, 'total' => $total];
+    }
+
     private function snapshots(array $row): array
     {
         $topics = $this->connection->prepare('SELECT OriginalTopicId, TopicNameSnapshot FROM TestAttemptTopics WHERE TestAttemptId = ? ORDER BY OriginalTopicId');

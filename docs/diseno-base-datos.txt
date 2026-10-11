@@ -7,7 +7,7 @@ Se parte de una base vacía. El archivo SQL crea nueve tablas en MySQL 8.0.16+
 con InnoDB y utf8mb4. Fue importado y probado en MySQL 8.0.46. Este documento
 describe el objetivo del backend PHP, cuya capa de acceso PDO ya está
 implementada. Banco, importación, generación, entrega y detalle de intento
-están implementados; listado y estadísticas siguen pendientes. No se importan
+están implementados, junto con listado paginado y estadísticas (P11–P12). No se importan
 filas de SQL Server ni de SQLite.
 
 2. CATÁLOGO Y RELACIONES
@@ -45,7 +45,13 @@ confirman o revierten todas sus filas como una sola operación, verificadas
 con fallos forzados. P10 verifica también carreras de SubmissionId en MariaDB;
 tras rollback lee el intento ganador y comprueba compatibilidad por cuenta,
 preguntas, orden de opciones y respuestas, sin corregir de nuevo el banco.
-El detalle lee exclusivamente snapshots y filtra por usuario.
+El listado y detalle filtran por usuario y leen nombres/textos de snapshots.
+El listado aprovecha el índice de usuario/fecha y desempata por ID; consulta
+solo los temas de la página, sin cargar preguntas ni opciones. Los totales y
+la página se leen en una transacción consistente.
+El resumen agrega contadores finales de TestAttempts. Los resultados por tema
+se agregan desde TestAttemptQuestions, sin depender del estado actual del banco.
+El nombre del tema procede del último snapshot perteneciente a la cuenta.
 
 Los nombres de tema se normalizan antes de guardar. La comparación sin
 mayúsculas depende de la colación `utf8mb4_unicode_ci`; hay que verificar el

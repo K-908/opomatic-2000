@@ -8,7 +8,7 @@ param(
     [switch]$Questions,
     [switch]$Import,
     [switch]$Generation,
-    [switch]$Completion
+    [switch]$Completion, [switch]$Progress
 )
 
 $ErrorActionPreference = 'Stop'
@@ -16,7 +16,7 @@ $ErrorActionPreference = 'Stop'
 if (-not (Test-Path Env:OPOMATIC_DB_ADMIN_PASSWORD)) {
     throw 'Define OPOMATIC_DB_ADMIN_PASSWORD en el proceso antes de ejecutar la prueba.'
 }
-if (@($BootstrapAccounts, $Authentication, $Topics, $Questions, $Import, $Generation, $Completion).Where({ $_ }).Count -gt 1) {
+if (@($BootstrapAccounts, $Authentication, $Topics, $Questions, $Import, $Generation, $Completion, $Progress).Where({ $_ }).Count -gt 1) {
     throw 'Ejecuta cada modo de prueba en bases temporales distintas.'
 }
 
@@ -54,8 +54,8 @@ try {
             composer test:bootstrap
             if ($LASTEXITCODE -ne 0) { throw 'Falló la prueba de alta inicial.' }
         }
-        if ($Authentication -or $Topics -or $Questions -or $Import -or $Generation -or $Completion) {
-            & (Join-Path $PSScriptRoot 'AuthHttpTest.ps1') -Topics:$Topics -Questions:$Questions -Import:$Import -Generation:$Generation -Completion:$Completion
+        if ($Authentication -or $Topics -or $Questions -or $Import -or $Generation -or $Completion -or $Progress) {
+            & (Join-Path $PSScriptRoot 'AuthHttpTest.ps1') -Topics:$Topics -Questions:$Questions -Import:$Import -Generation:$Generation -Completion:$Completion -Progress:$Progress
             if ($LASTEXITCODE -ne 0) { throw 'Falló la prueba HTTP o de navegador.' }
         }
     } finally {

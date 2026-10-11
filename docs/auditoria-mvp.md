@@ -6,8 +6,8 @@ Pendiente. El MVP de OpoMatic-3000 fue auditado en su repositorio, pero esa
 evidencia no demuestra que el port PHP cumpla los mismos requisitos. El
 frontend está copiado; PHP responde a `GET /health` y tiene infraestructura
 HTTP, acceso MySQL, autenticación, banco, importación, generación y entrega
-de tests y detalle desde snapshots. Listado del histórico y estadísticas
-siguen pendientes.
+de tests, detalle desde snapshots, listado paginado y estadísticas. P11–P12
+están verificados localmente; publicación y auditoría integral siguen pendientes.
 
 ## Comprobaciones para el cierre
 
@@ -15,7 +15,7 @@ siguen pendientes.
 |---|---|---|
 | Contrato HTTP | Rutas, estados, JSON y Problem Details iguales a `diseno-api.txt` | Pendiente |
 | MySQL | Esquema, claves y transacciones probadas en la versión del hosting | Pendiente |
-| Cuentas | Hashes PHP, sesiones, CSRF, límite de login y separación de datos | Autenticación, accesos y detalle de intento aislados localmente; listado/estadísticas pendientes |
+| Cuentas | Hashes PHP, sesiones, CSRF, límite de login y separación de datos | Autenticación, accesos, detalle, listado y estadísticas aislados y verificados localmente |
 | Tests | Selección, token, puntuación, idempotencia y snapshots | Selección, token, corrección, idempotencia y snapshots verificados localmente (P09–P10) |
 | Frontend | Lint, pruebas, build y recorrido E2E contra PHP | Pendiente |
 | Hosting | HTTPS, rutas Apache, secretos privados, copias y restauración | Pendiente |
@@ -29,8 +29,8 @@ P04 verificó en otra base temporal la creación única de `Gogloglo` y
 `Virginia`, hashes comprobados con `password_verify()`, rechazo de repetición y
 rollback ante un fallo en la segunda inserción. P05 verificó por HTTP los dos
 logins, cookies, CSRF, expiración, logout, límite por IP y registros de acceso
-aislados. Aún falta verificar aislamiento de intentos y estadísticas cuando
-existan esas rutas y comprobar HTTPS/cookies en el hosting real.
+aislados. P10–P12 verifican también el aislamiento de intentos y estadísticas.
+Falta comprobar HTTPS/cookies en el hosting real.
 
 Consulta `requisitos.txt` para historias y reglas de negocio. Al cerrar el
 port, registra aquí resultados reales y versiones del entorno comprobado.
@@ -232,3 +232,36 @@ el esquema. React termina en el detalle desde snapshots; el listado queda en P11
 P11 sigue pendiente para el listado/paginación del histórico y sus recorridos
 de vacío, errores y navegación. El detalle necesario para P10 ya está
 implementado y probado. Estadísticas, hosting y cierre integral pendientes.
+
+## Cierre local de P11–P12 — 2026-10-11
+
+- Entorno real de esta ejecución: PHP 8.2.28, PDO MySQL/cURL/OpenSSL,
+  MariaDB 10.4.32 local y Chromium. Se usó un INI temporal que elimina las
+  referencias a Redis/MongoDB ausentes de Herd; no se modificó el INI del usuario.
+- Sintaxis de todos los archivos PHP: OK. `composer test:http`,
+  `composer test:scoring` y `composer test:tokens`: OK.
+- `RunDatabaseTest.ps1 -Progress`: OK. Esquema con nueve tablas, 10 FK y
+  10 CHECK; HTTP exige sesión y mantiene JSON/Problem Details. Paginación
+  predeterminada y límite 100, parámetros inválidos/arrays, páginas extremas,
+  fechas iguales, orden fecha/ID y 27 intentos sin pérdidas ni duplicados.
+- Listado/revisión conservan snapshots tras cambiar texto, opciones y estado
+  del banco. Otra cuenta no puede consultar el intento (404); listado,
+  resumen y ranking solo incluyen datos propios y llevan `no-store`.
+- Estadísticas: vacíos, tests solo en blanco, totales, denominador sin blancos,
+  ranking por precisión/volumen/nombre/ID y temas inactivos. Se verifican
+  redondeo a dos decimales, comparación de 1/199 frente a 1/200 antes de
+  redondear y selección del nombre del último snapshot de cada cuenta.
+- Chromium: `main-journey.spec.ts` y `progress.spec.ts`, 2 pruebas OK.
+  Creación de contenido, entrega, revisión, histórico paginado/recarga,
+  actualización de métricas, estados vacíos/loading/error, teclado y móvil
+  a 320 px sin desbordamiento. Las suites HTTP y navegador reinician solo
+  los contadores de login de la instalación temporal entre suites.
+- Regresión `RunDatabaseTest.ps1 -Completion`: HTTP de entrega, idempotencia,
+  carrera, rollback y snapshots OK; `completion.spec.ts`, 1 prueba OK.
+- Frontend: lint OK; Vitest 54 pruebas en 14 archivos OK; build OK.
+- Ambos modos restauraron la copia en una segunda base temporal y confirmaron
+  nueve tablas. Se eliminaron bases, cuentas SQL efímeras y servidores de prueba.
+- Sin cambios del esquema ni contratos incompatibles con React. OpenAPI parcial
+  de las cuatro consultas en `openapi-progress.json`; las demás rutas se
+  documentarán durante P14. P13 y P14 siguen pendientes, junto con la
+  verificación del proveedor de P00; estas pruebas locales no certifican hosting.

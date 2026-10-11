@@ -67,6 +67,10 @@ en servidor y guarda intento y snapshots transaccionalmente. submissionId
 impide duplicados; una carrera recupera el resultado ganador después del
 rollback. La repetición se compara con snapshots, sin volver a corregir.
 El detalle filtra por usuario y devuelve 404 para un intento ajeno.
+P11 añade listado paginado consistente por cuenta sin cargar preguntas/opciones.
+P12 añade StatisticsRepository/StatisticsService/StatisticsHandler: agregados
+SQL de intentos finalizados y snapshots, precisión sin blancos y ranking previo
+al redondeo. El nombre de cada tema procede del último snapshot propio.
 
 Las credenciales MySQL y la clave de firma se configuran fuera de Git. Nunca
 deben publicarse `src/`, `vendor/`, `.env` ni copias de seguridad. La forma de

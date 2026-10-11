@@ -7,8 +7,8 @@ CONTRATO OBJETIVO PARA LA MIGRACIÓN A PHP
 Este documento conserva el contrato que espera el frontend React. La API PHP
 deberá implementarlo y se documentará en OpenAPI al programarla. Por ahora
 existen salud, autenticación, temas, preguntas, importación y generación
-de tests, entrega y detalle de intento; listado del histórico y estadísticas
-describen comportamiento objetivo. El enrutamiento y los errores
+de tests, entrega, histórico paginado y estadísticas; estas funcionalidades
+están implementadas y verificadas localmente hasta P12. El enrutamiento y los errores
 HTTP básicos también están implementados.
 
 En producción la API se sirve bajo `/api` en el mismo origen que React. En
@@ -504,7 +504,7 @@ juntos. Respuestas de entrega y detalle llevan Cache-Control: no-store.
 11. HISTORIAL Y REVISIÓN
 
 
-11.1. Listar intentos (pendiente P11)
+11.1. Listar intentos (implementado y verificado en P11)
 
     GET /attempts?page=1&pageSize=20
 
@@ -524,7 +524,12 @@ Respuesta paginada. Elemento:
   "score": 6.50
 }
 
-Orden predeterminado: completedAtUtc descendente.
+Orden: completedAtUtc descendente e id descendente en empate.
+Solo aparecen intentos de la cuenta autenticada. page admite 1–2147483647;
+pageSize, 1–100, predeterminado 20. Una entrada inválida devuelve 400 con
+errors.page o errors.pageSize. Las páginas fuera de rango conservan los totales
+y devuelven items vacío. El resumen incluye temas desde snapshots, sin cargar
+preguntas/opciones. Listado y detalle responden con Cache-Control: no-store.
 
 
 11.2. Obtener un intento completo (implementado en P10 para el resultado final)
@@ -572,7 +577,7 @@ Un ID ausente, inválido o perteneciente a otra cuenta produce 404.
 12. ESTADÍSTICAS
 
 
-12.1. Resumen global
+12.1. Resumen global (implementado y verificado en P12)
 
     GET /statistics/summary
 
@@ -590,7 +595,7 @@ Respuesta 200:
 accuracyPercentage es null cuando no existen preguntas contestadas.
 
 
-12.2. Estadísticas y ranking por tema
+12.2. Estadísticas y ranking por tema (implementado y verificado en P12)
 
     GET /statistics/topics
 
@@ -613,12 +618,19 @@ Respuesta 200:
 - Los temas sin respuestas contestadas tienen accuracyPercentage y
   rankingPosition a null.
 - Orden: porcentaje descendente; en empate, más preguntas contestadas; después,
-  nombre ascendente para obtener un resultado estable.
+  nombre ascendente y finalmente ID ascendente para obtener un resultado estable.
+- Se compara la proporción antes de redondear la precisión mostrada a dos decimales.
+- Los puestos son consecutivos desde 1; los temas sin contestadas aparecen al final.
+- Se agrega por ID original; el nombre es el snapshot más reciente de esa cuenta
+  (fecha descendente, ID de intento descendente en empate).
+- Resumen y ranking exigen sesión, filtran por cuenta y llevan Cache-Control: no-store.
+- El resumen vacío devuelve contadores cero y precisión null; los temas vacíos, [].
 
 
 13. OPENAPI Y EVOLUCIÓN DEL CONTRATO
 
-- La API PHP publicará o mantendrá un documento OpenAPI durante la implementación.
+- docs/openapi-progress.json documenta en OpenAPI 3.0.3 las consultas de histórico
+  y estadísticas. El contrato OpenAPI de las demás rutas sigue pendiente para P14.
 - Swagger UI permitirá explorar y probar la API durante el desarrollo.
 - Los nombres y ejemplos de este documento se trasladarán a los contratos del
   código.

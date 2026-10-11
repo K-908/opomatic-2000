@@ -1,0 +1,691 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "OpoMatic-2000: consultas de histórico y estadísticas",
+    "version": "1.0.0",
+    "description": "Contrato parcial de P11–P12 y detalle de P10. Las demás rutas se documentarán en P14."
+  },
+  "security": [
+    {
+      "sessionCookie": []
+    }
+  ],
+  "paths": {
+    "/api/attempts": {
+      "get": {
+        "summary": "Histórico por cuenta; orden fecha/ID descendente y temas desde snapshots.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647,
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Datos propios del usuario autenticado.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedAttempts"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesión ausente o caducada.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Método no permitido.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "GET"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error inesperado sin detalles privados.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Paginación inválida; errors.page y/o errors.pageSize.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/attempts/{id}": {
+      "get": {
+        "summary": "Detalle inmutable del intento propio.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Datos propios del usuario autenticado.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttemptDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesión ausente o caducada.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Método no permitido.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "GET"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error inesperado sin detalles privados.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "ID inválido, ausente o perteneciente a otra cuenta.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/statistics/summary": {
+      "get": {
+        "summary": "Totales de intentos finalizados; precisión sin blancos, null sin contestadas.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Datos propios del usuario autenticado.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatisticsSummary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesión ausente o caducada.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Método no permitido.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "GET"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error inesperado sin detalles privados.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/statistics/topics": {
+      "get": {
+        "summary": "Ranking antes de redondear; desempate volumen/nombre/ID; nombre del último snapshot propio.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Datos propios del usuario autenticado.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TopicStatistics"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesión ausente o caducada.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Método no permitido.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "GET"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error inesperado sin detalles privados.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "sessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "OPOMATICSESSID"
+      }
+    },
+    "schemas": {
+      "AttemptTopic": {
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "AttemptSummary": {
+        "type": "object",
+        "required": [
+          "id",
+          "completedAtUtc",
+          "topics",
+          "totalQuestions",
+          "correctCount",
+          "incorrectCount",
+          "unansweredCount",
+          "score"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "completedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "topics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AttemptTopic"
+            }
+          },
+          "totalQuestions": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "correctCount": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "incorrectCount": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "unansweredCount": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "score": {
+            "type": "number",
+            "minimum": -2.5,
+            "maximum": 10
+          }
+        }
+      },
+      "AttemptOption": {
+        "type": "object",
+        "required": [
+          "displayOrder",
+          "text",
+          "isCorrect",
+          "isSelected"
+        ],
+        "properties": {
+          "displayOrder": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4
+          },
+          "text": {
+            "type": "string"
+          },
+          "isCorrect": {
+            "type": "boolean"
+          },
+          "isSelected": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AttemptQuestion": {
+        "type": "object",
+        "required": [
+          "displayOrder",
+          "originalQuestionId",
+          "topicName",
+          "statement",
+          "result",
+          "options"
+        ],
+        "properties": {
+          "displayOrder": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "originalQuestionId": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "topicName": {
+            "type": "string"
+          },
+          "statement": {
+            "type": "string"
+          },
+          "result": {
+            "type": "string",
+            "enum": [
+              "unanswered",
+              "correct",
+              "incorrect"
+            ]
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AttemptOption"
+            },
+            "minItems": 4,
+            "maxItems": 4
+          }
+        }
+      },
+      "AttemptDetail": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AttemptSummary"
+          },
+          {
+            "type": "object",
+            "required": [
+              "questions"
+            ],
+            "properties": {
+              "questions": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AttemptQuestion"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "PagedAttempts": {
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalItems",
+          "totalPages"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AttemptSummary"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "pageSize": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "totalItems": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        }
+      },
+      "StatisticsSummary": {
+        "type": "object",
+        "required": [
+          "completedTests",
+          "answeredQuestions",
+          "correctCount",
+          "incorrectCount",
+          "unansweredCount",
+          "accuracyPercentage"
+        ],
+        "properties": {
+          "completedTests": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "answeredQuestions": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "correctCount": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "incorrectCount": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "unansweredCount": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "accuracyPercentage": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "maximum": 100
+          }
+        }
+      },
+      "TopicStatistics": {
+        "type": "object",
+        "required": [
+          "topicId",
+          "topicName",
+          "answeredQuestions",
+          "correctCount",
+          "incorrectCount",
+          "unansweredCount",
+          "accuracyPercentage",
+          "rankingPosition"
+        ],
+        "properties": {
+          "topicId": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "topicName": {
+            "type": "string"
+          },
+          "answeredQuestions": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "correctCount": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "incorrectCount": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "unansweredCount": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "accuracyPercentage": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "maximum": 100
+          },
+          "rankingPosition": {
+            "type": "integer",
+            "minimum": 1,
+            "nullable": true
+          }
+        }
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "required": [
+          "type",
+          "title",
+          "status",
+          "detail",
+          "instance"
+        ],
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "instance": {
+            "type": "string"
+          },
+          "traceId": {
+            "type": "string"
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

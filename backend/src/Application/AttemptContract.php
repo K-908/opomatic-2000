@@ -17,11 +17,17 @@ final class AttemptContract
             'score' => AttemptScorer::points((int) $row['Score'])];
     }
 
-    public static function detail(array $row): array
+    public static function summary(array $row): array
     {
         $summary = self::finished($row); unset($summary['attemptId']);
         return ['id' => (int) $row['Id']] + $summary + [
             'topics' => array_map(static fn (array $topic): array => ['id' => (int) $topic['OriginalTopicId'], 'name' => $topic['TopicNameSnapshot']], $row['Topics']),
+        ];
+    }
+
+    public static function detail(array $row): array
+    {
+        return self::summary($row) + [
             'questions' => array_map(static fn (array $question): array => [
                 'displayOrder' => (int) $question['DisplayOrder'], 'originalQuestionId' => (int) $question['OriginalQuestionId'],
                 'topicName' => $question['TopicNameSnapshot'], 'statement' => $question['StatementSnapshot'],

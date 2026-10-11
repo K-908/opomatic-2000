@@ -8,9 +8,8 @@ una base de datos vacía: no hay migración de datos de SQLite ni de SQL Server.
 
 El frontend React está copiado y PHP ya dispone de enrutamiento HTTP,
 `GET /health`, errores Problem Details, acceso PDO a MySQL, autenticación, gestión de temas/preguntas, importación JSON, generación, entrega/corrección de tests y detalle del intento.
-**El listado del histórico y las estadísticas siguen pendientes**,
-por lo que la aplicación completa no puede
-usarse ni publicarse todavía. Los documentos describen el contrato
+**El histórico paginado y las estadísticas están completos y verificados localmente (P11–P12)**.
+La publicación en hosting y la auditoría final siguen pendientes (P13–P14). Los documentos describen el contrato
 y el trabajo pendiente; el historial de tareas cerradas de OpoMatic-3000 no se
 presenta aquí como trabajo ya realizado.
 
@@ -19,7 +18,7 @@ presenta aquí como trabajo ya realizado.
 ```text
 backend/
   public/            Punto de entrada web y router local de PHP
-  src/Http/          Salud, cuentas, banco, tests y detalle de intento
+  src/Http/          Salud, cuentas, banco, tests, histórico y estadísticas
   src/Application/   Cuentas, banco, tests y snapshots
   src/Domain/        Validación, puntuación y errores del banco/tests
   src/Infrastructure/ PDO, sesiones, repositorios y transacciones
@@ -69,7 +68,7 @@ y `DB_PASSWORD` en el proceso PHP. Usa [`.env.example`](.env.example) solo como
 lista de variables; copiarla a `.env` no configura la aplicación. La conexión
 usa `utf8mb4`, consultas preparadas nativas y transacciones para operaciones
 compuestas. `composer install` comprueba que estén disponibles `pdo` y
-`pdo_mysql`. La autenticación y el registro de accesos ya usan la base; los endpoints de tests, histórico y estadísticas siguen pendientes.
+`pdo_mysql`. La autenticación, el banco, los tests, el histórico y las estadísticas ya usan la base y están verificados localmente.
 
 Para repetir la prueba de integración local en **dos bases temporales nuevas**,
 con un usuario MySQL que pueda crearlas y borrarlas:
@@ -280,7 +279,7 @@ lee solo snapshots de la cuenta autenticada y devuelve 404 para intentos
 ajenos. La revisión conserva texto, opciones, orden, selección y correcta
 aunque se edite/desactive después el banco. Al corregir usa el contenido actual
 del banco; un token vigente puede entregarse tras una desactivación lógica.
-Listado y paginación del histórico corresponden a P11.
+El listado paginado del histórico está disponible desde P11.
 
 Con el entorno PHP 8.2+, OpenSSL, PDO MySQL, cURL y Chromium anterior:
 
@@ -295,6 +294,38 @@ rollback forzado y el recorrido `completion.spec.ts` desde nuevo test hasta
 la revisión. Simula perder la respuesta después de guardarla en PHP y verifica
 que React reintenta sin duplicar el intento. Usa cuentas/clave/bases temporales,
 comprueba copia/restauración y elimina sus recursos al finalizar.
+
+## Histórico y estadísticas
+
+`GET /api/attempts?page=1&pageSize=20` devuelve solo los intentos de la cuenta
+actual, ordenados por fecha descendente y por ID descendente en empate.
+`page` admite 1–2147483647 y `pageSize` 1–100; parámetros inválidos devuelven
+400 con Problem Details. Las páginas fuera del rango devuelven una lista vacía
+con sus totales. Los temas y los detalles proceden de snapshots.
+
+`GET /api/statistics/summary` calcula tests finalizados, contestadas, aciertos,
+fallos, blancos y precisión global. `GET /api/statistics/topics` agrega resultados
+históricos por tema, incluidos los inactivos. La precisión excluye blancos y
+es `null` cuando no hay contestadas. El ranking compara la proporción antes de
+redondear, después el volumen de respuestas, nombre y ID. Los temas sin
+contestadas no reciben puesto; el nombre es el último snapshot de esa cuenta.
+Las consultas exigen sesión y responden con `Cache-Control: no-store`.
+
+El contrato OpenAPI de estas consultas, incluido el detalle del intento, está
+en [docs/openapi-progress.json](docs/openapi-progress.json); no representa aún
+la especificación completa de toda la API.
+
+Con PHP 8.2+, PDO MySQL, cURL, Composer, dependencias frontend y Chromium
+instalados, configura `OPOMATIC_DB_ADMIN_PASSWORD` en el proceso y ejecuta:
+
+```powershell
+.\backend\tests\Integration\RunDatabaseTest.ps1 -AdminUser root -Progress
+```
+
+Crea bases/cuentas temporales, verifica HTTP, snapshots, paginación, empates,
+precisión y aislamiento; ejecuta `main-journey.spec.ts` y `progress.spec.ts`
+contra PHP, restaura una copia y elimina sus recursos. Las suites HTTP y
+navegador usan ventanas de límite de login separadas en esa instalación temporal.
 
 ## Frontend
 
@@ -321,8 +352,8 @@ La configuración concreta se preparará con la API y se verificará en el
 hosting elegido. Compilar React no sustituye el backend.
 
 Los recorridos Playwright de banco, generación y entrega hasta la revisión
-ya se verifican contra PHP en P06–P10. El recorrido integral copiado sigue
-pendiente hasta completar el listado del histórico y las estadísticas.
+se verifican contra PHP en P06–P10. P11–P12 verifican también el recorrido
+integral de creación, test, histórico, estadísticas y aislamiento por cuenta.
 `npm.cmd run test:e2e` exige una instalación local de prueba y las variables
 `OPOMATIC_E2E_BASE_URL`, `OPOMATIC_E2E_GOGLOGLO_PASSWORD` y
 `OPOMATIC_E2E_VIRGINIA_PASSWORD`; no arranca ni modifica el repositorio .NET.
