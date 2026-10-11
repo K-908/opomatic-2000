@@ -1,0 +1,98 @@
+FUNCIONALIDADES OBJETIVO DE OPOMATIC-2000
+
+Este documento conserva el alcance funcional de OpoMatic-3000 para la versión
+PHP/MySQL. Las funcionalidades siguen pendientes en la API PHP.
+
+VISIÓN DEL PRODUCTO
+
+Aplicación de uso personal para practicar tests de oposición, registrar los
+resultados y detectar los temas que necesitan más estudio.
+
+
+ACCESO Y USUARIOS
+
+- Acceso exclusivo para las cuentas Gogloglo y Virginia mediante usuario y
+  contraseña, sin registro público ni recuperación de contraseña.
+- Historial, estadísticas y progreso separados por cuenta.
+- Registro de fecha e IP observada por el servidor en cada login correcto.
+- Consulta de los últimos accesos de la propia cuenta.
+
+
+FUNCIONALIDADES BÁSICAS (MVP)
+
+Gestión de temas y preguntas
+
+- Crear, editar, desactivar y reactivar temas.
+- Crear, editar, desactivar y reactivar preguntas.
+- Cada pregunta pertenece a un único tema.
+- Cada pregunta muestra cuatro posibles respuestas.
+- Cada pregunta tiene una única respuesta correcta.
+- Importar preguntas de forma masiva desde un archivo JSON.
+- Validar los datos importados e informar de los errores encontrados.
+
+Realización de tests
+
+- Generar un test seleccionando uno o varios temas.
+- Configurar el número de preguntas del test.
+- Seleccionar las preguntas de forma aleatoria.
+- Informar si no existen suficientes preguntas para generar el test solicitado.
+- Seleccionar una respuesta por pregunta.
+- Permitir dejar preguntas sin responder.
+- Navegar hacia delante y hacia atrás durante el test.
+- Revisar y modificar las respuestas antes de finalizarlo.
+- Finalizar el test y calcular la puntuación según los criterios establecidos.
+- Guardar cada intento completo: fecha, preguntas, respuestas y resultado.
+
+Resultados e historial
+
+- Mostrar la puntuación final.
+- Revisar los aciertos, los fallos y las preguntas sin responder.
+- Mostrar la respuesta elegida y la respuesta correcta de cada pregunta.
+- Consultar el historial de tests realizados.
+
+Estadísticas básicas
+
+- Número de tests realizados.
+- Número de preguntas contestadas.
+- Porcentaje de aciertos global.
+- Porcentaje de aciertos y número de respuestas por tema.
+- Número de errores por tema.
+- Ranking de temas con mejores y peores resultados.
+
+
+FUNCIONALIDADES IMPORTANTES (VERSIONES POSTERIORES)
+
+- Establecer un límite de tiempo para el test.
+- Definir qué ocurre cuando se agota el tiempo.
+- Repetir las preguntas falladas después de finalizar un test.
+- Rehacer un test contestando únicamente las preguntas falladas.
+- Consultar la evolución de los resultados a lo largo del tiempo.
+- Añadir notas o explicaciones a las preguntas.
+
+
+FUNCIONALIDADES OPCIONALES
+
+- Establecer objetivos semanales.
+- Configurar recordatorios mediante Telegram, SMS, WhatsApp u otros servicios.
+
+
+REGLAS CONFIRMADAS PARA EL MVP
+
+- Cada acierto suma 10/N puntos, siendo N el total de preguntas.
+- Cada fallo resta (10/N)*0,25 puntos.
+- Las preguntas sin responder valen 0 puntos.
+- La nota se expresa sobre 10, puede ser negativa y se muestra con dos
+  decimales.
+- Los intentos repetidos cuentan como intentos independientes en las
+  estadísticas.
+- El ranking de temas usa primero el porcentaje de aciertos y después el número
+  de preguntas contestadas.
+- Preguntas y opciones se presentan en orden aleatorio.
+- Los tests en curso no se guardan en el MVP.
+
+
+FUERA DEL ALCANCE INICIAL
+
+- Registro público de usuarios.
+- Gestión de roles y permisos.
+- Recuperación de contraseñas.

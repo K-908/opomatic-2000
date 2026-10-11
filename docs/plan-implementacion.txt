@@ -1,0 +1,49 @@
+PLAN DE IMPLEMENTACIÓN DE OPOMATIC-2000
+MIGRACIÓN DE REACT/.NET/SQLITE A REACT/PHP/MYSQL, SIN DOCKER
+
+ESTADO A 2026-10-11
+
+Preparación documental y estructura inicial en curso: frontend copiado,
+esquema MySQL importable y carpetas PHP creadas. P00 ha verificado PHP, PDO y
+MySQL locales; queda comprobar un hosting concreto cuando se elija. P01 ya
+dispone de Composer, autoload y `GET /health`; P02 añade enrutamiento, JSON y
+Problem Details. Los endpoints funcionales PHP están pendientes. No se heredan
+las marcas de tareas terminadas
+del repositorio OpoMatic-3000.
+
+1. BASE TÉCNICA
+
+Comprobar la versión PHP y extensiones PDO MySQL del hosting. Elegir estructura
+de paquetes y pruebas. Crear front controller, manejo de errores, configuración
+local, conexión PDO y `GET /health`. Definir en Apache el enrutamiento de
+`/api/*` y el fallback de la SPA. Verificarlo en local sin contenedores.
+
+2. PERSISTENCIA Y CUENTAS
+
+Importar `database/schema.sql` en una base aislada. Crear el acceso MySQL,
+alta segura de `Gogloglo` y `Virginia` con hashes PHP, login, sesión, logout,
+auditoría de accesos y protección CSRF. Validar acceso por cuenta.
+
+3. BANCO DE PREGUNTAS
+
+Implementar temas, preguntas, cuatro opciones, búsqueda, filtros y paginación.
+Añadir importación JSON con validación completa y transacción. Mantener rutas y
+contratos de `docs/diseno-api.txt` para reutilizar React.
+
+4. TESTS E HISTORIAL
+
+Implementar disponibilidad, selección aleatoria, barajado y token temporal
+autenticado. Implementar corrección en un único lugar, entrega idempotente y
+snapshots. Añadir histórico paginado y detalle inmutable por cuenta.
+
+5. ESTADÍSTICAS Y PUBLICACIÓN
+
+Agregar métricas desde snapshots. Ejecutar pruebas de backend y frontend,
+recorrido E2E y comprobaciones de seguridad. Preparar una publicación en
+hosting compartido con HTTPS, copia de seguridad y restauración ensayada.
+
+Cada bloque se divide en las tareas pendientes de `docs/tareas/README.md`.
+Solo se marca terminado tras implementar y verificar el comportamiento PHP.
+
+La lista ejecutable, con dependencias y criterios comunes de cierre, está en
+`docs/plan-migracion-php.md`.

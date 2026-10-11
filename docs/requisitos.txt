@@ -1,0 +1,499 @@
+REQUISITOS DE OPOMATIC-2000
+
+Adaptación de los requisitos funcionales de OpoMatic-3000 para el port PHP/MySQL.
+Describen el comportamiento objetivo; no implican que la implementación PHP
+esté terminada.
+FASE 2 - ANÁLISIS DE REQUISITOS
+
+
+1. PROPÓSITO DEL DOCUMENTO
+
+Este documento describe los requisitos de la primera versión de la aplicación
+(MVP). Define qué debe hacer el sistema y cómo se comprobará que cada
+funcionalidad está terminada.
+
+Las decisiones sobre arquitectura, base de datos, API, componentes visuales y
+otras cuestiones de implementación se tomarán en fases posteriores.
+
+
+2. VISIÓN DEL PRODUCTO
+
+Aplicación de uso personal para practicar tests de oposición, registrar los
+resultados y detectar los temas que necesitan más estudio.
+
+
+3. USUARIOS Y ALCANCE
+
+- La aplicación dispone de dos cuentas cerradas: Gogloglo y Virginia.
+- No existe registro público, gestión de roles ni recuperación de contraseñas.
+- El banco de temas y preguntas es compartido; intentos, histórico y
+  estadísticas quedan separados por usuario.
+- El objetivo del MVP es completar el recorrido:
+
+  crear o importar preguntas -> generar un test -> responderlo -> corregirlo
+  -> guardar el intento -> revisar resultados y estadísticas.
+
+
+4. CONCEPTOS
+
+Tema:
+Agrupación de preguntas que pertenecen a una misma materia de estudio.
+
+Pregunta:
+Enunciado asociado a un único tema y acompañado de exactamente cuatro
+opciones, de las cuales solo una es correcta.
+
+Test:
+Conjunto de preguntas generado para uno o varios temas.
+
+Intento:
+Realización concreta de un test. Conserva la fecha, las preguntas presentadas,
+las respuestas elegidas y el resultado obtenido.
+
+Pregunta contestada:
+Pregunta para la que el usuario ha seleccionado una opción.
+
+Pregunta sin contestar:
+Pregunta para la que el usuario no ha seleccionado ninguna opción.
+
+
+5. HISTORIAS DE USUARIO Y CRITERIOS DE ACEPTACIÓN
+
+
+HU-01. Gestionar temas
+
+Como estudiante,
+quiero crear y mantener temas,
+para organizar las preguntas por materias.
+
+Criterios de aceptación:
+
+- Se puede crear un tema indicando, como mínimo, su nombre.
+- El nombre del tema es obligatorio.
+- Se puede consultar la lista de temas existentes.
+- Se puede modificar el nombre de un tema.
+- Se puede desactivar y reactivar un tema.
+- El sistema evita que la operación sobre un tema deje datos históricos
+  incoherentes.
+- El sistema informa claramente si una operación no puede completarse.
+
+
+HU-02. Gestionar preguntas
+
+Como estudiante,
+quiero crear y mantener preguntas asociadas a temas,
+para disponer de contenido con el que generar tests.
+
+Criterios de aceptación:
+
+- Para crear una pregunta se debe indicar el enunciado.
+- Cada pregunta debe pertenecer a un único tema.
+- Cada pregunta debe tener exactamente cuatro opciones.
+- Exactamente una de las cuatro opciones debe estar marcada como correcta.
+- No se puede guardar una pregunta que incumpla alguna de estas condiciones.
+- Se pueden consultar las preguntas existentes.
+- Se pueden editar el enunciado, el tema, las opciones y la respuesta correcta.
+- Se puede desactivar y reactivar una pregunta.
+- La modificación posterior de una pregunta no debe alterar los datos
+  históricos de los intentos ya completados.
+- Los errores de validación se muestran de forma comprensible.
+
+
+HU-03. Importar preguntas
+
+Como estudiante,
+quiero importar muchas preguntas desde un archivo JSON,
+para evitar introducirlas manualmente una a una.
+
+Criterios de aceptación:
+
+- El sistema permite seleccionar un archivo JSON.
+- Cada pregunta importada contiene un enunciado, un tema, cuatro opciones y la
+  identificación de una única respuesta correcta.
+- El sistema valida el formato y el contenido antes de guardar las preguntas.
+- El sistema no importa como válida una pregunta que incumpla las reglas.
+- Si la importación es correcta, se informa de los temas creados o reutilizados
+  y del número de preguntas importadas.
+- Si contiene errores, no se importa ninguna pregunta y se muestran todas las
+  causas encontradas.
+- Un error en una pregunta no debe ocultar los errores encontrados en las demás.
+- El formato exacto del archivo JSON se documentará junto con un ejemplo.
+
+
+HU-04. Generar un test
+
+Como estudiante,
+quiero generar un test de uno o varios temas y elegir su número de preguntas,
+para practicar el contenido que me interese.
+
+Criterios de aceptación:
+
+- Se debe seleccionar al menos un tema.
+- Se debe indicar un número de preguntas mayor que cero.
+- El sistema selecciona preguntas pertenecientes únicamente a los temas
+  elegidos.
+- Las preguntas se seleccionan aleatoriamente.
+- Una misma pregunta no se repite dentro del mismo test.
+- Antes de comenzar, el sistema comprueba que existen suficientes preguntas.
+- Si no existen suficientes preguntas, el test no se genera y se informa de
+  cuántas hay disponibles.
+- El test conserva las preguntas seleccionadas durante todo el intento.
+
+
+HU-05. Responder y revisar un test
+
+Como estudiante,
+quiero responder las preguntas y revisar mis respuestas antes de entregar,
+para poder completar el test de forma flexible.
+
+Criterios de aceptación:
+
+- Cada pregunta muestra su enunciado y cuatro opciones.
+- Solo se puede seleccionar una opción por pregunta.
+- Se puede cambiar una respuesta antes de finalizar el test.
+- Se puede dejar una pregunta sin contestar.
+- Se puede navegar hacia delante y hacia atrás.
+- Al volver a una pregunta, se conserva la respuesta seleccionada.
+- Antes de finalizar se puede revisar qué preguntas están contestadas y cuáles
+  están sin contestar.
+- Las respuestas correctas no se muestran mientras el test está en curso.
+- Finalizar el test requiere una confirmación.
+- Si existen preguntas sin contestar, la confirmación indica cuántas hay.
+- El test debe completarse de principio a fin en la misma sesión.
+- Si el usuario intenta cerrar, recargar o abandonar la página durante el test,
+  la aplicación advierte de que perderá el progreso.
+- El MVP no guarda ni permite recuperar tests en curso.
+
+
+HU-06. Finalizar y puntuar un test
+
+Como estudiante,
+quiero finalizar un test y obtener su nota,
+para evaluar mis conocimientos.
+
+Criterios de aceptación:
+
+- El sistema clasifica cada pregunta como acertada, fallada o sin contestar.
+- El sistema calcula la nota aplicando las reglas de puntuación de la sección 6.
+- La nota se expresa sobre 10.
+- La nota puede ser negativa.
+- La aplicación muestra la nota final y los números de aciertos, fallos y
+  preguntas sin contestar.
+- La cantidad de aciertos, fallos y preguntas sin contestar suma el número total
+  de preguntas del test.
+- Al finalizar, se guarda el intento completo.
+- Un intento finalizado no puede modificarse.
+- La operación de finalización no debe guardar dos veces el mismo intento.
+
+
+HU-07. Revisar el resultado
+
+Como estudiante,
+quiero revisar las respuestas de un test terminado,
+para comprender mis aciertos y errores.
+
+Criterios de aceptación:
+
+- Se pueden revisar todas las preguntas del intento.
+- Cada pregunta indica si fue acertada, fallada o quedó sin contestar.
+- Se muestra la respuesta seleccionada por el usuario, si existe.
+- Se muestra siempre la respuesta correcta.
+- Se muestran el tema de la pregunta y la nota total del intento.
+- La revisión no permite modificar las respuestas ni recalcular el intento como
+  si fuera nuevo.
+
+
+HU-08. Consultar el historial
+
+Como estudiante,
+quiero consultar los tests que he realizado,
+para revisar mi actividad y recuperar resultados anteriores.
+
+Criterios de aceptación:
+
+- Se muestra una lista de los intentos finalizados.
+- Cada elemento muestra, como mínimo, la fecha, los temas, el número de
+  preguntas y la nota.
+- Se puede abrir un intento para consultar su resumen.
+- Desde el resumen se puede acceder a la revisión de sus preguntas.
+- Los intentos se muestran inicialmente del más reciente al más antiguo.
+- Los intentos finalizados permanecen disponibles aunque una pregunta o un tema
+  se modifique o desactive posteriormente.
+
+
+HU-09. Consultar estadísticas generales
+
+Como estudiante,
+quiero consultar estadísticas globales,
+para conocer mi volumen de práctica y mi rendimiento.
+
+Criterios de aceptación:
+
+- Se muestra el número total de tests finalizados.
+- Se muestra el número total de preguntas contestadas.
+- Las preguntas sin contestar no se incluyen en el número de preguntas
+  contestadas.
+- Se muestran por separado los totales de aciertos, fallos y preguntas sin
+  contestar.
+- Se muestra el porcentaje global de aciertos.
+- Cuando todavía no existen respuestas, el sistema muestra que no hay datos y
+  evita divisiones entre cero.
+- Las estadísticas se calculan únicamente a partir de intentos finalizados.
+
+
+HU-10. Consultar estadísticas por tema
+
+Como estudiante,
+quiero comparar mis resultados por tema,
+para identificar las materias que llevo mejor y peor.
+
+Criterios de aceptación:
+
+- Para cada tema se muestran el número de respuestas, los aciertos, los fallos
+  y el porcentaje de aciertos.
+- Las preguntas sin contestar se muestran por separado.
+- El porcentaje de aciertos de un tema se calcula sobre las preguntas
+  contestadas de ese tema.
+- Si un tema no tiene preguntas contestadas, se indica que todavía no hay datos.
+- Se puede consultar un ranking de temas del mejor al peor resultado.
+- El ranking utiliza el porcentaje de aciertos como criterio principal.
+- Junto al porcentaje se muestra el número de preguntas contestadas, para dar
+  contexto al resultado.
+- Los temas sin respuestas no participan en el ranking.
+- En caso de empate, aparece primero el tema con más preguntas contestadas.
+
+
+HU-11. Acceder con una cuenta y revisar sus accesos
+
+Como estudiante,
+quiero identificarme con mi cuenta y ver sus accesos recientes,
+para mantener separado mi progreso y detectar un posible uso compartido.
+
+Criterios de aceptación:
+
+- Solo Gogloglo y Virginia pueden autenticarse con contraseñas verificadas
+  frente a hashes almacenados en MySQL. Las contraseñas iniciales se crean
+  una sola vez y nunca se versionan.
+- La pantalla de acceso solo muestra usuario, contraseña, el error asociado y
+  el botón de login; no ofrece registro ni recuperación.
+- Una sesión válida dura como máximo doce horas y puede cerrarse manualmente.
+- Cada login correcto registra la fecha UTC y la IP observada por el backend.
+- Cada cuenta solo ve sus intentos, estadísticas y registros de acceso.
+- Se parte de una base nueva y vacía; no se migran intentos de la versión .NET.
+- La MAC no se recopila porque un navegador web no puede obtenerla de forma
+  fiable ni enviarla a través de Internet.
+
+
+6. REGLAS DE NEGOCIO
+
+
+RN-01. Estructura de las preguntas
+
+- Cada pregunta pertenece a un único tema.
+- Cada pregunta tiene exactamente cuatro opciones.
+- Cada pregunta tiene exactamente una respuesta correcta.
+
+
+RN-02. Valor de una respuesta correcta
+
+Si N es el número total de preguntas del test, una respuesta correcta suma:
+
+    10 / N puntos
+
+Todas las preguntas de un mismo test tienen el mismo valor.
+
+
+RN-03. Penalización de una respuesta incorrecta
+
+Una respuesta incorrecta resta el 25 % del valor de una respuesta correcta:
+
+    (10 / N) * 0,25 puntos
+
+
+RN-04. Preguntas sin contestar
+
+Una pregunta sin contestar suma 0 puntos y no aplica ninguna penalización.
+
+
+RN-05. Fórmula de la nota final
+
+Si:
+
+    N = número total de preguntas
+    A = número de respuestas acertadas
+    F = número de respuestas falladas
+    S = número de preguntas sin contestar
+
+Entonces:
+
+    A + F + S = N
+
+Y la nota final es:
+
+    Nota = A * (10 / N) - F * ((10 / N) * 0,25)
+
+Forma equivalente:
+
+    Nota = (10 / N) * (A - 0,25 * F)
+
+- La nota máxima posible es 10.
+- La nota mínima posible es -2,5.
+- La nota puede ser negativa.
+- Las preguntas sin contestar no aparecen en la fórmula porque valen 0 puntos.
+
+
+RN-06. Ejemplo de puntuación
+
+Para un test de 20 preguntas con 14 aciertos, 4 fallos y 2 preguntas sin
+contestar:
+
+    Valor de un acierto = 10 / 20 = 0,5
+    Penalización de un fallo = 0,5 * 0,25 = 0,125
+    Nota = 14 * 0,5 - 4 * 0,125
+    Nota = 7 - 0,5
+    Nota = 6,5
+
+
+RN-07. Precisión del cálculo
+
+- No se redondean por separado los puntos de cada pregunta.
+- La nota se calcula usando la fórmula completa para evitar errores acumulados.
+- La aplicación conserva la precisión necesaria para reproducir el resultado.
+- La nota se muestra siempre con dos decimales.
+
+
+RN-08. Porcentaje global de aciertos
+
+El porcentaje global de aciertos mide la proporción de respuestas correctas
+entre las preguntas contestadas:
+
+    Porcentaje de aciertos = A / (A + F) * 100
+
+Las preguntas sin contestar no se incluyen en este porcentaje.
+
+Si no hay preguntas contestadas, el porcentaje no se calcula y se muestra
+"Sin datos".
+
+
+RN-09. Porcentaje de aciertos por tema
+
+Para cada tema:
+
+    Porcentaje del tema =
+        aciertos del tema / preguntas contestadas del tema * 100
+
+Las preguntas sin contestar no se incluyen en el denominador.
+
+
+RN-10. Conservación del histórico
+
+- Un intento finalizado conserva las preguntas y opciones tal como se mostraron
+  en el momento de realizarlo.
+- Editar o desactivar posteriormente una pregunta o un tema no cambia los
+  intentos anteriores.
+- Solo los intentos finalizados participan en las estadísticas.
+
+
+7. REQUISITOS NO FUNCIONALES
+
+
+RNF-01. Persistencia e integridad
+
+- Los temas, preguntas, intentos y resultados deben persistir en MySQL.
+- No deben quedar intentos parcialmente guardados como si estuvieran
+  finalizados.
+- Los datos históricos deben permanecer coherentes tras editar o desactivar
+  temas y preguntas.
+
+
+RNF-02. Usabilidad
+
+- Los mensajes de validación y error deben explicar qué debe corregirse.
+- Las acciones de finalización o eliminación deben solicitar confirmación
+  cuando puedan provocar una pérdida accidental de trabajo o datos.
+- El estado de las respuestas debe ser fácil de reconocer durante la revisión.
+
+
+RNF-03. Rendimiento
+
+- Para un volumen de uso personal, las pantallas y operaciones habituales deben
+  responder sin esperas apreciables.
+- La generación de un test y el cálculo de estadísticas no deben bloquear la
+  interfaz mientras se procesan.
+
+
+RNF-04. Seguridad básica
+
+- El sistema debe validar los datos tanto en el frontend como en el backend.
+- El backend no debe confiar en que los datos recibidos desde el frontend son
+  válidos.
+- Las credenciales y cadenas de conexión no deben guardarse en el código fuente.
+- Toda la API salvo salud y login requiere autenticación.
+- El login limita intentos repetidos y devuelve errores que no revelan si una
+  cuenta concreta existe.
+
+
+RNF-05. Compatibilidad
+
+- La aplicación web debe funcionar en una versión moderna de los navegadores
+  principales.
+- El diseño adaptable a móvil se considera importante, pero no es obligatorio
+  para dar por completado el primer MVP.
+
+
+RNF-06. Mantenibilidad
+
+- El frontend React, el backend PHP y el acceso a MySQL deben mantener
+  responsabilidades claramente separadas.
+- Las reglas de puntuación deben centralizarse para evitar resultados distintos
+  en diferentes partes de la aplicación.
+- Las funcionalidades principales deben poder verificarse mediante pruebas
+  automatizadas.
+
+
+8. FUNCIONALIDADES POSTERIORES AL MVP
+
+- Límite de tiempo para el test.
+- Comportamiento automático cuando se agote el tiempo.
+- Repetición de las preguntas falladas después de finalizar un test.
+- Creación de un nuevo test únicamente con las preguntas falladas de un intento.
+- Gráficos de evolución de resultados a lo largo del tiempo.
+- Notas o explicaciones asociadas a las preguntas.
+- Diseño completamente adaptado a dispositivos móviles.
+- Objetivos semanales.
+- Recordatorios mediante Telegram, SMS, WhatsApp u otros servicios.
+
+Estas funcionalidades requerirán sus propias historias y criterios de aceptación
+antes de implementarse.
+
+
+9. FUERA DEL ALCANCE DEL MVP
+
+- Registro público de usuarios.
+- Gestión de roles y permisos.
+- Recuperación de contraseñas.
+- Integraciones con servicios externos de mensajería.
+
+
+10. DECISIONES DE DISEÑO CONFIRMADAS
+
+- Los temas y las preguntas utilizados anteriormente se desactivan en lugar de
+  eliminarse físicamente, para conservar la integridad del histórico.
+- La importación JSON es transaccional: primero se valida el archivo completo y,
+  si alguna pregunta contiene errores, no se importa ninguna.
+- El orden de las cuatro opciones se aleatoriza al generar cada test.
+- La nota se presenta siempre con dos decimales.
+- Los tests en curso no se guardan en el MVP. Deben realizarse de principio a
+  fin; cerrar, recargar o abandonar la página provoca la pérdida del progreso.
+- El banco de preguntas es compartido, pero el progreso pertenece a la cuenta
+  autenticada.
+- El diseño UX/UI queda delegado en el desarrollo. Se priorizarán la claridad,
+  la rapidez de uso, la accesibilidad y una navegación coherente.
+
+
+11. CONTRATO JSON CONFIRMADO
+
+- El esquema exacto y su comportamiento transaccional están definidos en
+  diseno-api.txt, sección 8.
+- El JSON agrupa preguntas por tema, contiene cuatro opciones de texto y señala
+  la correcta mediante correctOption con una posición del 1 al 4.

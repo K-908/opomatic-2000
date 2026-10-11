@@ -1,0 +1,598 @@
+DISEÑO DE LA API DE OPOMATIC-2000
+CONTRATO OBJETIVO PARA LA MIGRACIÓN A PHP
+
+
+1. OBJETIVO
+
+Este documento conserva el contrato que espera el frontend React. La API PHP
+deberá implementarlo y se documentará en OpenAPI al programarla. Por ahora solo
+`GET /health` existe; las demás rutas funcionales describen comportamiento
+objetivo. El enrutamiento y los errores HTTP básicos también están implementados.
+
+En producción la API se sirve bajo `/api` en el mismo origen que React. En
+desarrollo podrá usarse el proxy de Vite hacia el servidor PHP local.
+
+Todas las rutas descritas son relativas a /api, salvo `GET /health`.
+
+
+2. CONVENCIONES GENERALES
+
+- JSON en camelCase y codificación UTF-8.
+- Fechas en UTC con formato ISO 8601, por ejemplo 2026-08-18T16:30:00Z.
+- Identificadores numéricos positivos.
+- Texto sin espacios al principio o al final después de validarlo.
+- Respuestas 200 para consultas y actualizaciones con contenido.
+- Respuestas 201 para recursos creados.
+- Respuestas 204 para cambios correctos sin contenido.
+- Errores con application/problem+json (Problem Details).
+- La API nunca confía en contadores, notas ni respuestas correctas calculadas
+  por React: los vuelve a calcular en el servidor.
+- Los contratos HTTP no exponen directamente filas ni modelos de MySQL.
+
+`GET /health` no requiere sesión y devuelve 200 con `application/json`:
+
+{
+  "status": "ok",
+  "application": "OpoMatic-2000"
+}
+
+
+3. FORMATO DE ERRORES
+
+Ejemplo:
+
+{
+  "type": "https://opomatic-2000/errors/validation",
+  "title": "Los datos enviados no son válidos",
+  "status": 400,
+  "detail": "Corrige los campos indicados.",
+  "instance": "/api/questions",
+  "traceId": "00-...",
+  "errors": {
+    "statement": ["El enunciado es obligatorio."],
+    "options": ["La pregunta debe contener exactamente cuatro opciones."]
+  }
+}
+
+Códigos habituales:
+
+- 401 Unauthorized: sesión ausente o credenciales incorrectas.
+- 429 Too Many Requests: demasiados intentos de login en un minuto.
+- 400 Bad Request: formato o validación incorrectos.
+- 404 Not Found: recurso inexistente.
+- 405 Method Not Allowed: ruta conocida con otro método; incluye `Allow`.
+- 409 Conflict: nombre duplicado, recurso inactivo o conflicto de estado.
+- 413 Payload Too Large: archivo de importación demasiado grande.
+- 415 Unsupported Media Type: se esperaba JSON para una ruta que lo consume.
+- 500 Internal Server Error: error inesperado sin detalles internos sensibles.
+
+Las rutas actuales devuelven 404 y 405 en `application/problem+json`. Cuando
+una ruta futura lea un objeto JSON, un cuerpo mal formado o que no sea objeto
+devolverá 400 con `errors.body`; un tipo de contenido no JSON devolverá 415.
+Los errores inesperados devuelven 500 con `traceId` sin mostrar la excepción.
+
+
+4. LÍMITES INICIALES
+
+- Nombre de tema: 1 a 150 caracteres.
+- Enunciado: 1 a 10.000 caracteres.
+- Texto de una opción: 1 a 1.000 caracteres.
+- Preguntas por test: 1 a 200.
+- Tamaño de página: 1 a 100; valor predeterminado 20.
+- Archivo JSON de importación: máximo 5 MB y 2.000 preguntas.
+
+Estos límites podrán revisarse con datos de uso reales.
+
+
+5. PAGINACIÓN
+
+Las listas potencialmente grandes utilizan page y pageSize.
+
+Respuesta común:
+
+{
+  "items": [],
+  "page": 1,
+  "pageSize": 20,
+  "totalItems": 0,
+  "totalPages": 0
+}
+
+
+6. TEMAS
+
+
+6.1. Listar temas
+
+    GET /topics?includeInactive=false
+
+Respuesta 200:
+
+[
+  {
+    "id": 1,
+    "name": "Derecho constitucional",
+    "isActive": true,
+    "activeQuestionCount": 120
+  }
+]
+
+Por defecto solo devuelve temas activos. La pantalla de administración puede
+solicitar también los inactivos.
+
+
+6.2. Obtener un tema
+
+    GET /topics/{id}
+
+Respuestas: 200 o 404.
+
+
+6.3. Crear un tema
+
+    POST /topics
+
+Petición:
+
+{
+  "name": "Derecho constitucional"
+}
+
+Respuesta 201: tema creado y cabecera Location.
+
+Validaciones:
+
+- Nombre obligatorio y dentro del límite.
+- Nombre único ignorando mayúsculas, minúsculas y espacios exteriores.
+
+
+6.4. Editar un tema
+
+    PUT /topics/{id}
+
+Petición:
+
+{
+  "name": "Derecho Constitucional"
+}
+
+Respuestas: 200, 400, 404 o 409.
+
+
+6.5. Cambiar el estado de un tema
+
+    PATCH /topics/{id}/status
+
+Petición:
+
+{
+  "isActive": false
+}
+
+Reglas:
+
+- Desactivar un tema no cambia el estado individual de sus preguntas, pero
+  ninguna de ellas puede utilizarse mientras el tema esté inactivo.
+- React debe pedir confirmación antes de desactivarlo.
+- Al reactivar el tema vuelven a estar disponibles sus preguntas que conserven
+  isActive = true.
+
+Respuestas: 204, 404 o 409.
+
+
+7. PREGUNTAS
+
+
+7.1. Listar preguntas
+
+    GET /questions?topicId=1&includeInactive=false&search=&page=1&pageSize=20
+
+Cada filtro es opcional. La respuesta es paginada.
+
+Elemento de lista:
+
+{
+  "id": 10,
+  "topicId": 1,
+  "topicName": "Derecho constitucional",
+  "statement": "¿Cuál es...?",
+  "isActive": true,
+  "updatedAtUtc": "2026-08-18T16:30:00Z"
+}
+
+
+7.2. Obtener una pregunta para administración
+
+    GET /questions/{id}
+
+Respuesta 200:
+
+{
+  "id": 10,
+  "topicId": 1,
+  "statement": "¿Cuál es...?",
+  "isActive": true,
+  "options": [
+    { "id": 101, "position": 1, "text": "Opción 1", "isCorrect": false },
+    { "id": 102, "position": 2, "text": "Opción 2", "isCorrect": true },
+    { "id": 103, "position": 3, "text": "Opción 3", "isCorrect": false },
+    { "id": 104, "position": 4, "text": "Opción 4", "isCorrect": false }
+  ]
+}
+
+Este endpoint pertenece a la administración y sí muestra la respuesta correcta.
+
+
+7.3. Crear una pregunta
+
+    POST /questions
+
+Petición:
+
+{
+  "topicId": 1,
+  "statement": "¿Cuál es...?",
+  "options": [
+    { "position": 1, "text": "Opción 1", "isCorrect": false },
+    { "position": 2, "text": "Opción 2", "isCorrect": true },
+    { "position": 3, "text": "Opción 3", "isCorrect": false },
+    { "position": 4, "text": "Opción 4", "isCorrect": false }
+  ]
+}
+
+Validaciones:
+
+- El tema existe y está activo.
+- Enunciado obligatorio y dentro del límite.
+- Exactamente cuatro opciones con posiciones 1, 2, 3 y 4.
+- Textos obligatorios y dentro del límite.
+- Exactamente una opción correcta.
+
+Respuesta 201: detalle de la pregunta creada.
+
+
+7.4. Editar una pregunta
+
+    PUT /questions/{id}
+
+Utiliza el mismo cuerpo que la creación. Las cuatro opciones existentes se
+actualizan por posición dentro de una única transacción, conservando sus
+identificadores internos para no romper referencias históricas.
+
+Respuestas: 200, 400, 404 o 409.
+
+
+7.5. Cambiar el estado de una pregunta
+
+    PATCH /questions/{id}/status
+
+Petición:
+
+{
+  "isActive": false
+}
+
+- No se puede activar una pregunta si su tema está inactivo.
+- Desactivar no modifica los intentos históricos.
+
+Respuestas: 204, 404 o 409.
+
+
+8. IMPORTACIÓN JSON
+
+
+8.1. Importar preguntas
+
+    POST /questions/import
+    Content-Type: application/json
+
+Contrato definitivo inicial:
+
+{
+  "topics": [
+    {
+      "name": "Tema 1",
+      "questions": [
+        {
+          "statement": "Texto de la pregunta",
+          "options": [
+            "Primera opción",
+            "Segunda opción",
+            "Tercera opción",
+            "Cuarta opción"
+          ],
+          "correctOption": 2
+        }
+      ]
+    }
+  ]
+}
+
+Reglas:
+
+- correctOption usa posiciones del 1 al 4.
+- No se permiten temas repetidos dentro del mismo archivo, ignorando
+  mayúsculas, minúsculas y espacios exteriores.
+- Si el tema no existe, se crea.
+- Si existe y está activo, se reutiliza.
+- Si existe pero está inactivo, se devuelve un conflicto.
+- Primero se valida el documento completo.
+- Si existe cualquier error, no se importa ningún dato.
+- Si todo es correcto, se guarda todo en una única transacción.
+- La importación no intenta detectar enunciados duplicados.
+
+Respuesta 201:
+
+{
+  "createdTopics": 2,
+  "reusedTopics": 3,
+  "importedQuestions": 150
+}
+
+Un error de validación incluye rutas precisas, por ejemplo:
+
+{
+  "errors": {
+    "topics[0].questions[4].options": [
+      "Debe contener exactamente cuatro opciones."
+    ]
+  }
+}
+
+
+9. GENERACIÓN DE TESTS
+
+
+9.1. Generar un test temporal
+
+    POST /tests/generate
+
+Petición:
+
+{
+  "topicIds": [1, 3],
+  "numberOfQuestions": 20
+}
+
+Reglas:
+
+- Al menos un tema activo, sin identificadores repetidos.
+- Número de preguntas dentro de los límites.
+- Solo se usan preguntas activas de temas activos.
+- No se repite una pregunta dentro del test.
+- Preguntas y opciones se barajan en el servidor.
+- Si no hay suficientes preguntas, se devuelve 409 indicando requestedCount y
+  availableCount.
+
+Respuesta 200:
+
+{
+  "testToken": "valor-opaco-protegido",
+  "expiresAtUtc": "2026-08-19T04:30:00Z",
+  "topics": [
+    { "id": 1, "name": "Tema 1" },
+    { "id": 3, "name": "Tema 3" }
+  ],
+  "questions": [
+    {
+      "id": 25,
+      "displayOrder": 1,
+      "topicId": 1,
+      "topicName": "Tema 1",
+      "statement": "Texto de la pregunta",
+      "options": [
+        { "id": 102, "displayOrder": 1, "text": "Opción B" },
+        { "id": 100, "displayOrder": 2, "text": "Opción A" },
+        { "id": 103, "displayOrder": 3, "text": "Opción C" },
+        { "id": 101, "displayOrder": 4, "text": "Opción D" }
+      ]
+    }
+  ]
+}
+
+La respuesta nunca incluye isCorrect. testToken contiene de forma protegida los
+identificadores y el orden generado, y caduca a las 12 horas. No representa un
+registro guardado en MySQL ni permite recuperar el progreso al recargar.
+
+
+10. FINALIZACIÓN DE TESTS
+
+
+10.1. Finalizar, puntuar y guardar
+
+    POST /tests/finish
+
+Petición:
+
+{
+  "submissionId": "6e73a793-4be2-43b4-9eca-602e50a14a98",
+  "testToken": "valor-opaco-protegido",
+  "answers": [
+    { "questionId": 25, "selectedOptionId": 102 },
+    { "questionId": 31, "selectedOptionId": null }
+  ]
+}
+
+Reglas:
+
+- submissionId es un UUID generado una vez por React para esa entrega.
+- El token debe ser válido, no estar alterado y no haber caducado.
+- answers contiene exactamente una entrada por cada pregunta del token.
+- selectedOptionId puede ser null para una pregunta sin contestar.
+- Una opción seleccionada debe pertenecer a la pregunta correspondiente.
+- El backend obtiene las respuestas correctas, clasifica cada resultado,
+  calcula la nota y crea todo el histórico en una única transacción.
+- La nota se calcula con decimal y sin redondeos intermedios.
+- La nota se almacena con precisión y se presenta con dos decimales.
+- submissionId es único. Repetir exactamente la misma solicitud devuelve el
+  intento ya creado y no duplica el histórico.
+
+Respuesta 201 en la primera entrega o 200 si ya existía:
+
+{
+  "attemptId": 500,
+  "completedAtUtc": "2026-08-18T17:15:00Z",
+  "totalQuestions": 20,
+  "correctCount": 14,
+  "incorrectCount": 4,
+  "unansweredCount": 2,
+  "score": 6.50
+}
+
+Errores adicionales:
+
+- 400 si faltan respuestas, hay duplicados o una opción no corresponde.
+- 409 si submissionId ya se utilizó con datos diferentes.
+- 410 Gone si el token ha caducado.
+
+
+11. HISTORIAL Y REVISIÓN
+
+
+11.1. Listar intentos
+
+    GET /attempts?page=1&pageSize=20
+
+Respuesta paginada. Elemento:
+
+{
+  "id": 500,
+  "completedAtUtc": "2026-08-18T17:15:00Z",
+  "topics": [
+    { "id": 1, "name": "Tema 1" },
+    { "id": 3, "name": "Tema 3" }
+  ],
+  "totalQuestions": 20,
+  "correctCount": 14,
+  "incorrectCount": 4,
+  "unansweredCount": 2,
+  "score": 6.50
+}
+
+Orden predeterminado: completedAtUtc descendente.
+
+
+11.2. Obtener un intento completo
+
+    GET /attempts/{id}
+
+Respuesta 200:
+
+{
+  "id": 500,
+  "completedAtUtc": "2026-08-18T17:15:00Z",
+  "topics": [
+    { "id": 1, "name": "Tema 1" }
+  ],
+  "totalQuestions": 20,
+  "correctCount": 14,
+  "incorrectCount": 4,
+  "unansweredCount": 2,
+  "score": 6.50,
+  "questions": [
+    {
+      "displayOrder": 1,
+      "originalQuestionId": 25,
+      "topicName": "Tema 1",
+      "statement": "Texto histórico",
+      "result": "incorrect",
+      "options": [
+        {
+          "displayOrder": 1,
+          "text": "Opción B histórica",
+          "isCorrect": false,
+          "isSelected": true
+        }
+      ]
+    }
+  ]
+}
+
+result puede ser unanswered, correct o incorrect. Todo el texto procede de las
+instantáneas del intento, no del banco de preguntas actual.
+
+
+12. ESTADÍSTICAS
+
+
+12.1. Resumen global
+
+    GET /statistics/summary
+
+Respuesta 200:
+
+{
+  "completedTests": 35,
+  "answeredQuestions": 680,
+  "correctCount": 510,
+  "incorrectCount": 170,
+  "unansweredCount": 20,
+  "accuracyPercentage": 75.00
+}
+
+accuracyPercentage es null cuando no existen preguntas contestadas.
+
+
+12.2. Estadísticas y ranking por tema
+
+    GET /statistics/topics
+
+Respuesta 200:
+
+[
+  {
+    "topicId": 1,
+    "topicName": "Tema 1",
+    "answeredQuestions": 100,
+    "correctCount": 70,
+    "incorrectCount": 30,
+    "unansweredCount": 5,
+    "accuracyPercentage": 70.00,
+    "rankingPosition": 2
+  }
+]
+
+- Se incluyen temas activos e inactivos que tengan histórico.
+- Los temas sin respuestas contestadas tienen accuracyPercentage y
+  rankingPosition a null.
+- Orden: porcentaje descendente; en empate, más preguntas contestadas; después,
+  nombre ascendente para obtener un resultado estable.
+
+
+13. OPENAPI Y EVOLUCIÓN DEL CONTRATO
+
+- La API PHP publicará o mantendrá un documento OpenAPI durante la implementación.
+- Swagger UI permitirá explorar y probar la API durante el desarrollo.
+- Los nombres y ejemplos de este documento se trasladarán a los contratos del
+  código.
+- Un cambio incompatible deberá actualizar primero este documento, los tests de
+  contrato y el frontend consumidor.
+- No se añadirá versionado /v1 en el MVP. Se incorporará si aparece un segundo
+  consumidor o es necesario mantener contratos incompatibles simultáneamente.
+
+
+14. AUTENTICACIÓN Y ACCESOS
+
+Todas las rutas salvo `/health` y `POST /auth/login` requieren la cookie de
+sesión HTTP-only. El frontend envía las peticiones con credenciales.
+
+    POST /auth/login
+
+Petición:
+
+{
+  "username": "Gogloglo",
+  "password": "valor secreto"
+}
+
+Respuesta 200: `{ "username": "Gogloglo" }`. Un login correcto registra la
+IP vista por el servidor. Las credenciales incorrectas devuelven 401 con un
+mensaje genérico y el endpoint admite como máximo cinco intentos por IP y
+minuto.
+
+    GET /auth/session
+    POST /auth/logout
+    GET /auth/accesses
+
+`GET /auth/accesses` devuelve como máximo los 50 accesos correctos más recientes
+de la cuenta autenticada, con `accessedAtUtc` e `ipAddress`.

@@ -1,0 +1,30 @@
+# PHP and local configuration
+/vendor/
+/.env
+/.env.*
+!/.env.example
+/backend/.env
+/backend/.env.*
+!/backend/.env.example
+/backend/coverage/
+/backend/.phpunit.cache/
+*.log
+
+# Frontend
+**/node_modules/
+/frontend/dist/
+/frontend/.vite/
+/frontend/test-results/
+/frontend/playwright-report/
+*.tsbuildinfo
+
+# Local data and editors
+/backups/
+*.db
+*.db-shm
+*.db-wal
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+Desktop.ini

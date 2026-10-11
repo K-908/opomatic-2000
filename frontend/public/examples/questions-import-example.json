@@ -1,0 +1,29 @@
+{
+  "topics": [
+    {
+      "name": "Derecho constitucional",
+      "questions": [
+        {
+          "statement": "¿Cuál es la norma suprema del ordenamiento jurídico español?",
+          "options": [
+            "La Constitución",
+            "Una ley orgánica",
+            "Un real decreto",
+            "Un reglamento"
+          ],
+          "correctOption": 1
+        }
+      ]
+    },
+    {
+      "name": "Derecho administrativo",
+      "questions": [
+        {
+          "statement": "¿Cuántas opciones contiene cada pregunta de OpoMatic-2000?",
+          "options": ["Dos", "Tres", "Cuatro", "Cinco"],
+          "correctOption": 3
+        }
+      ]
+    }
+  ]
+}

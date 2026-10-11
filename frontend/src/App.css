@@ -1,0 +1,216 @@
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  border-bottom: 1px solid rgb(255 255 255 / 12%);
+  color: white;
+  background: rgb(15 23 42 / 96%);
+  box-shadow: 0 .5rem 1.5rem rgb(15 23 42 / 12%);
+  backdrop-filter: blur(12px);
+}
+
+.site-header__inner {
+  width: min(100% - 2rem, 74rem);
+  min-height: 4rem;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.site-brand,
+.site-home-link {
+  color: inherit;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.site-account {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+}
+
+.site-account > a:not(.site-home-link),
+.site-account > span,
+.site-account > button {
+  color: #e2e8f0;
+  font-size: .88rem;
+  font-weight: 700;
+}
+
+.site-account > a:not(.site-home-link) {
+  padding: .6rem;
+  text-decoration: none;
+}
+
+.site-account > button {
+  min-height: 2.5rem;
+  padding: .45rem .7rem;
+  border-color: rgb(255 255 255 / 22%);
+  background: transparent;
+}
+
+.auth-loading {
+  min-height: 100svh;
+  background: #0f172a;
+}
+
+.site-brand {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: .7rem;
+  letter-spacing: -.015em;
+}
+
+.site-brand__mark {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: .6rem;
+  color: #1e1b4b;
+  background: #c7d2fe;
+  font-weight: 900;
+}
+
+.site-home-link {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  padding: .55rem .9rem;
+  border: 1px solid rgb(255 255 255 / 22%);
+  border-radius: .7rem;
+  background: rgb(255 255 255 / 8%);
+}
+
+.site-home-link:hover,
+.site-home-link[aria-current='page'] {
+  border-color: rgb(199 210 254 / 70%);
+  background: rgb(199 210 254 / 16%);
+}
+
+.site-content {
+  min-height: calc(100svh - 4rem);
+}
+
+.welcome-card {
+  width: min(100%, 44rem);
+  padding: clamp(2rem, 6vw, 4.5rem);
+  border: 1px solid var(--border-color);
+  border-radius: 1.5rem;
+  background: var(--surface-color);
+  box-shadow: 0 1.5rem 4rem rgb(30 41 59 / 10%);
+}
+
+.eyebrow {
+  margin: 0 0 1rem;
+  color: var(--accent-color);
+  font-size: 0.8rem;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+h1 {
+  max-width: 12ch;
+  margin: 0;
+  color: var(--heading-color);
+  font-size: clamp(2.5rem, 8vw, 5.25rem);
+  line-height: 0.98;
+  letter-spacing: -0.055em;
+}
+
+.welcome-copy {
+  max-width: 35rem;
+  margin: 2rem 0;
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.project-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 0.7rem 1rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.project-status--loading {
+  background: var(--loading-background);
+  color: var(--loading-color);
+}
+
+.project-status--available {
+  background: var(--status-background);
+  color: var(--status-color);
+}
+
+.project-status--error {
+  background: var(--error-background);
+  color: var(--error-color);
+}
+
+.status-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 0.25rem color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.primary-link {
+  display: block;
+  width: fit-content;
+  margin-top: 1.5rem;
+  color: var(--accent-color);
+  font-weight: 750;
+}
+
+@media (max-width: 42rem) {
+  .site-header__inner {
+    width: min(100% - 1.25rem, 74rem);
+    min-height: 3.75rem;
+  }
+
+  .site-brand {
+    font-size: .95rem;
+  }
+
+  .site-brand__mark {
+    width: 1.85rem;
+    height: 1.85rem;
+  }
+
+  .site-home-link {
+    min-width: 4.5rem;
+  }
+
+  .site-account > span {
+    display: none;
+  }
+
+  .site-account > a:not(.site-home-link) {
+    display: none;
+  }
+
+  .site-account > button {
+    font-size: .8rem;
+  }
+}
+
+@media (max-width: 23rem) {
+  .site-brand > span:last-child {
+    overflow: hidden;
+    max-width: 7.5rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

@@ -1,0 +1,77 @@
+ARQUITECTURA TÉCNICA DE OPOMATIC-2000
+OBJETIVO DE LA MIGRACIÓN; NÚCLEO HTTP IMPLEMENTADO
+
+1. PROPÓSITO
+
+Conservar las funciones y el contrato HTTP de OpoMatic-3000 con una pila que
+pueda ejecutarse en un hosting compartido tradicional. El frontend sigue siendo
+React 19, TypeScript y Vite. El backend será PHP y la persistencia MySQL. No se
+utilizarán contenedores ni procesos de larga duración controlados por el usuario.
+
+La versión .NET sigue en el repositorio hermano. Esta versión parte de una base
+vacía, por decisión del propietario; no se trasladan datos de SQLite.
+
+2. COMPONENTES
+
+Navegador -> HTTPS/Apache -> React estático y /api -> PHP -> PDO -> MySQL
+
+- `frontend/`: copia del frontend React. Produce `dist/` mediante Vite. Las rutas
+  de la SPA necesitan fallback a `index.html` al refrescar.
+- `backend/public/`: contiene el punto de entrada PHP y router de desarrollo.
+  `/health` ya responde; la infraestructura enruta rutas `/api/*`, cuyos
+  controladores funcionales siguen pendientes.
+- `backend/src/Http/`: enrutamiento, lectura de JSON, respuestas y Problem
+  Details ya preparados; autenticación y validaciones de negocio pendientes.
+- `backend/src/Application/`: casos de uso de temas, preguntas, importación,
+  generación, entrega, historial, estadísticas y cuentas.
+- `backend/src/Domain/`: reglas puras, incluida la puntuación en un solo lugar.
+- `backend/src/Infrastructure/`: PDO, consultas MySQL, cookies y tokens.
+- `backend/tests/`: pruebas unitarias e integración por implementar.
+- `database/schema.sql`: esquema inicial para importar en una base vacía.
+
+En producción, React y PHP deben compartir el mismo origen para que la cookie
+de sesión se envíe sin CORS. `VITE_API_BASE_URL=/` se fija al compilar; Vite
+inserta esta variable en el paquete estático. En desarrollo se configurará un
+proxy de Vite o una URL local para PHP.
+
+3. CONTRATO Y SEGURIDAD
+
+La API debe mantener las rutas, estados y cuerpos JSON de
+`docs/diseno-api.txt`. Los errores siguen el formato `application/problem+json`.
+Toda entrada se valida en PHP. Los contratos de red se separan de las tablas.
+
+Las cuentas `Gogloglo` y `Virginia` se guardarán en `Users`, con hashes creados
+por `password_hash()` y verificados por `password_verify()`. Los hashes .NET
+anteriores no se reutilizan porque se parte de una base vacía. El alta inicial
+debe ser una operación explícita y segura; el esquema no contiene contraseñas.
+Las sesiones usarán cookies HttpOnly, Secure en HTTPS y SameSite adecuado.
+Las solicitudes que cambian estado deberán protegerse frente a CSRF. Los
+intentos de login se limitarán y los mensajes no revelarán si existe la cuenta.
+
+El token temporal de un test debe estar firmado o autenticado, incluir usuario
+y caducidad, y no revelar las respuestas correctas. La entrega se verifica en
+servidor y se guarda transaccionalmente. `submissionId` impide duplicados.
+
+Las credenciales MySQL y la clave de firma se configuran fuera de Git. Nunca
+deben publicarse `src/`, `vendor/`, `.env` ni copias de seguridad. La forma de
+subir archivos depende del hosting y se definirá al conocer su document root.
+
+4. BASE DE DATOS
+
+MySQL 8.0.16+ con InnoDB y `utf8mb4`; la compatibilidad con MariaDB deberá
+verificarse en la versión concreta del hosting. PDO usa consultas preparadas.
+Las fechas se guardan en UTC. Las importaciones y entregas usan transacciones.
+Los intentos guardan snapshots de temas, preguntas y opciones para preservar
+el histórico. La nota `Score` se guarda como entero en millonésimas, conforme
+al esquema, y se convierte al formato del contrato HTTP en el backend.
+
+Las modificaciones futuras del esquema se versionarán con scripts incrementales
+y una guía de aplicación; `schema.sql` representa la instalación inicial.
+
+5. VERIFICACIÓN
+
+El frontend copiado debe superar lint, pruebas unitarias y build. La futura API
+debe probar respuestas HTTP, autenticación, importación transaccional,
+restricciones reales de MySQL, idempotencia, puntuación e historial. Una prueba
+E2E deberá recorrer login, creación/importación, test, entrega y estadísticas
+en un entorno aislado antes de publicar.
