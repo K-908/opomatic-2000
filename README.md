@@ -9,7 +9,7 @@ una base de datos vacía: no hay migración de datos de SQLite ni de SQL Server.
 El frontend React está copiado y PHP ya dispone de enrutamiento HTTP,
 `GET /health`, errores Problem Details, acceso PDO a MySQL, autenticación, gestión de temas/preguntas, importación JSON, generación, entrega/corrección de tests y detalle del intento.
 **El histórico paginado y las estadísticas están completos y verificados localmente (P11–P12)**.
-La publicación en hosting y la auditoría final siguen pendientes (P13–P14). Los documentos describen el contrato
+La publicación P13 está completada; la auditoría final P14 sigue pendiente. Los documentos describen el contrato
 y el trabajo pendiente; el historial de tareas cerradas de OpoMatic-3000 no se
 presenta aquí como trabajo ya realizado.
 
@@ -25,7 +25,7 @@ backend/
   tests/Unit/        Pruebas de protección/caducidad de tokens
   tests/Integration/ Pruebas del núcleo HTTP y de MySQL
 database/schema.sql  Esquema inicial importable con phpMyAdmin
-deploy/apache/       Configuración de publicación (pendiente)
+deploy/apache/       Espacio para una alternativa de hosting Apache
 frontend/            React + TypeScript + Vite, copiado de OpoMatic-3000
 docs/                Especificación y plan de migración
 ```
@@ -346,10 +346,10 @@ $env:VITE_API_BASE_URL = '/'
 npm.cmd run build
 ```
 
-El contenido de `frontend/dist/` se publicará en el directorio web del hosting.
-Apache necesitará enviar `/api/*` a PHP y las rutas de la SPA a `index.html`.
-La configuración concreta se preparará con la API y se verificará en el
-hosting elegido. Compilar React no sustituye el backend.
+El contenido de `frontend/dist/` se publicó como parte de P13. El servidor
+envía `/api/*` y `/health` a PHP y las rutas SPA a `index.html`. La
+configuración concreta del servidor se conserva solo en local y está ignorada
+por Git.
 
 Los recorridos Playwright de banco, generación y entrega hasta la revisión
 se verifican contra PHP en P06–P10. P11–P12 verifican también el recorrido
@@ -369,7 +369,7 @@ integral de creación, test, histórico, estadísticas y aislamiento por cuenta.
   [plan por etapas](docs/plan-implementacion.txt) y
   [tareas por funcionalidad](docs/tareas/README.md) ordenan el trabajo pendiente.
 - [Entorno y requisitos del hosting](docs/entorno-hosting.md) recoge la
-  comprobación local y lo que habrá que confirmar en el proveedor.
+  comprobación local y la verificación genérica del servidor elegido.
 - [Auditoría](docs/auditoria-mvp.md) distingue la evidencia heredada de las
   verificaciones necesarias en PHP.
 - [Backlog posterior](docs/backlog-posterior-mvp.md) conserva ideas futuras.

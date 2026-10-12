@@ -21,6 +21,10 @@
 
 # Local data and editors
 /backups/
+# Self-hosted Raspberry Pi and router configuration, deployment notes, and scripts
+/deploy/raspberry-pi/
+/deploy/router/
+/docs/entorno-hosting.local.md
 *.db
 *.db-shm
 *.db-wal

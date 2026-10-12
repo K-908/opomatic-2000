@@ -1,22 +1,27 @@
-# 12. Despliegue en hosting compartido
+# 12. Despliegue PHP
 
-Estado: pendiente. No se utilizará Docker.
+Estado: completado el 12 de octubre de 2026. No se utiliza Docker.
 
-## T110 - Publicación Apache/PHP
+## T110 - Publicación
 
-- Definir ubicación de `backend/public` y `frontend/dist` según document root.
-- Enrutar `/api/*` y `/health` a PHP y el resto de rutas SPA a `index.html`.
-- Mantener código privado, `.env` y copias fuera del directorio público.
-- Usar `VITE_API_BASE_URL=/` al compilar React.
+React se compiló con `VITE_API_BASE_URL=/`. El servidor sirve `frontend/dist`,
+envía `/api/*` y `/health` a PHP y devuelve `index.html` al recargar rutas
+internas. El código privado, los secretos y las copias están fuera del
+directorio público.
 
-**Comprobación:** login y todas las rutas funcionan con HTTPS, incluso tras
-recargar una URL interna; no se puede descargar código ni configuración privada.
+**Comprobación:** HTTPS y login funcionan; `/health` devolvió 200,
+`/api/auth/me` sin sesión devolvió 401, una ruta SPA interna cargó y el acceso
+a un archivo privado devolvió 403. Las pantallas principales cargaron con
+sesión.
 
 ## T111 - Operación
 
-- Documentar importación de esquema en phpMyAdmin, alta de cuentas, actualización
-  de SQL, copias y restauración.
-- Comprobar requisitos concretos de PHP, MySQL/MariaDB, extensiones y Apache
-  del proveedor elegido.
+El esquema se importó en el servidor y se probaron 9 tablas, 10 claves
+foráneas y 10 restricciones `CHECK`. Las dos cuentas iniciales se crearon
+desde prompts ocultos. Una copia SQL privada se restauró en otra base temporal:
+9 tablas y 2 cuentas recuperadas. La renovación del certificado se simuló
+con éxito.
 
-**Comprobación:** publicación y restauración reproducibles sin contenedores.
+Las instrucciones, parámetros y archivos de configuración del servidor se
+guardan solo en una carpeta local ignorada por Git. Queda como tarea operativa
+conservar una copia cifrada fuera del servidor. P14 auditará el conjunto.

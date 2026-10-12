@@ -1,7 +1,7 @@
 # Lista de tareas para migrar OpoMatic-2000 a PHP
 
-Estado: migración en curso. **P00 está en curso, P01–P12 están completadas y
-P13–P14 están pendientes**. El frontend React y el esquema inicial MySQL ya
+Estado: migración en curso. **P00–P13 están completadas y P14 está pendiente**.
+El frontend React y el esquema inicial MySQL ya
 están copiados; PHP responde a `GET /health` y dispone de un núcleo HTTP y
 acceso PDO a MySQL.
 Se parte de una base vacía y no se usará Docker.
@@ -13,11 +13,11 @@ Las dependencias indican qué debe estar operativo antes de cerrar la tarea.
 
 | ID | Tarea y resultado verificable | Depende de |
 |---|---|---|
-| P00 | **Inventariar entorno:** comprobación local terminada y requisitos anotados en `entorno-hosting.md`; queda verificar el proveedor elegido e importar allí el esquema en una base de prueba. Estado: en curso. | — |
+| P00 | **Inventariar entorno:** comprobación local y del servidor elegido terminadas; esquema importado y restricciones verificadas en una base temporal. Completada. Los datos del servidor se conservan solo en documentación local ignorada por Git. | — |
 | P01 | **Arranque PHP:** `composer.json`, autoload, configuración local no versionada, front controller y `GET /health`. Completada: responde JSON desde PHP sin Docker. | — |
 | P02 | **Capa HTTP:** completada; router preparado para `/api`, lectura y validación básica de JSON, estados HTTP y `application/problem+json`. Probados 400, 404, 405 y errores inesperados. | P01 |
-| P03 | **Acceso MySQL:** completada en MySQL 8.0.46 local. Conexión PDO, consultas preparadas, transacciones, repositorios y comprobación de claves/restricciones de las nueve tablas; copia restaurada en otra base temporal. Falta repetir la compatibilidad en el hosting elegido (P00/P13). | P01 |
-| P04 | **Alta inicial de cuentas:** completada y probada en MySQL local. Comando PHP CLI de una sola ejecución para crear `Gogloglo` y `Virginia` con `password_hash()`, sin contraseñas en Git ni en SQL; una inserción fallida revierte ambas. Su ejecución definitiva queda para el despliegue. | P03 |
+| P03 | **Acceso MySQL:** completada en local y en el servidor elegido. Conexión PDO, consultas preparadas, transacciones, repositorios y comprobación de claves/restricciones de las nueve tablas; copia restaurada en otra base temporal. | P01 |
+| P04 | **Alta inicial de cuentas:** completada y ejecutada en el servidor elegido. Comando PHP CLI de una sola ejecución para crear `Gogloglo` y `Virginia` con `password_hash()`, sin contraseñas en Git ni en SQL; una inserción fallida revierte ambas. | P03 |
 | P05 | **Autenticación:** completada en local. Login, sesión de hasta 12 horas, logout, cookies, CSRF, cinco intentos por IP/minuto y `/auth/accesses` (máximo 50). Probado por HTTP con dos cuentas aisladas. El aislamiento del detalle, listado y estadísticas está verificado en P10–P12. | P02, P04 |
 | P06 | **Temas:** completada localmente. Lista, detalle, alta, edición y estado lógico con validación Unicode, nombres únicos y conteo de preguntas activas. HTTP y Chromium contra PHP/MariaDB verificados, incluida la pantalla React. | P03, P05 |
 | P07 | **Preguntas:** completada localmente. CRUD lógico, filtros, búsqueda literal, paginación, cuatro opciones y una correcta. Escritura transaccional con IDs conservados y rollback probado; snapshots intactos. Lista y formularios React verificados en Chromium contra PHP/MariaDB. | P06 |
@@ -26,7 +26,7 @@ Las dependencias indican qué debe estar operativo antes de cerrar la tarea.
 | P10 | **Corrección y entrega:** completada localmente. Puntuación exacta en millonésimas, validación de token/respuestas y snapshots atómicos. Idempotencia, carrera y rollback probados; recorrido React hasta el detalle inmutable por cuenta verificado en Chromium. | P09, P03 |
 | P11 | **Histórico:** completado localmente. Lista paginada consistente por cuenta, orden fecha/ID, validación y snapshots inmutables. HTTP y Chromium verifican navegación, vacíos, errores, teclado y móvil. | P10 |
 | P12 | **Estadísticas:** completadas localmente. Resumen y ranking por cuenta desde snapshots, precisión sin blancos, empates y redondeo. Panel y página React verificados; recorrido integral, copia y restauración temporal OK. | P11 |
-| P13 | **Publicación Apache:** compilar React con `VITE_API_BASE_URL=/`, servir `dist`, enviar `/api/*` y `/health` a PHP y las rutas SPA a `index.html`. Mantener `src`, configuración, dependencias y copias fuera del directorio público. | P00, P02, P05 |
+| P13 | **Publicación PHP:** completada con HTTPS, login, rutas API y SPA, configuración privada, copia y restauración probadas. Las instrucciones y parámetros del servidor se conservan solo en documentación local ignorada por Git. | P00, P02, P05 |
 | P14 | **Verificación integral:** comparar todas las rutas y errores con el contrato; ejecutar pruebas PHP/MySQL, lint, Vitest, build y Playwright contra instalación local aislada. Revisar HTTPS, cookies, CSRF, límites, copias y restauración. Registrar evidencia en `auditoria-mvp.md`. | P06–P13 |
 
 ## Orden de trabajo

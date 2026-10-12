@@ -6,19 +6,19 @@ Pendiente. El MVP de OpoMatic-3000 fue auditado en su repositorio, pero esa
 evidencia no demuestra que el port PHP cumpla los mismos requisitos. El
 frontend está copiado; PHP responde a `GET /health` y tiene infraestructura
 HTTP, acceso MySQL, autenticación, banco, importación, generación y entrega
-de tests, detalle desde snapshots, listado paginado y estadísticas. P11–P12
-están verificados localmente; publicación y auditoría integral siguen pendientes.
+de tests, detalle desde snapshots, listado paginado y estadísticas. La
+publicación P13 está completada; la auditoría integral P14 sigue pendiente.
 
 ## Comprobaciones para el cierre
 
 | Área | Evidencia necesaria en OpoMatic-2000 | Estado |
 |---|---|---|
 | Contrato HTTP | Rutas, estados, JSON y Problem Details iguales a `diseno-api.txt` | Pendiente |
-| MySQL | Esquema, claves y transacciones probadas en la versión del hosting | Pendiente |
+| MySQL | Esquema, claves y transacciones probadas en la versión del hosting | Esquema y restricciones probados en el servidor; auditoría integral pendiente |
 | Cuentas | Hashes PHP, sesiones, CSRF, límite de login y separación de datos | Autenticación, accesos, detalle, listado y estadísticas aislados y verificados localmente |
 | Tests | Selección, token, puntuación, idempotencia y snapshots | Selección, token, corrección, idempotencia y snapshots verificados localmente (P09–P10) |
 | Frontend | Lint, pruebas, build y recorrido E2E contra PHP | Pendiente |
-| Hosting | HTTPS, rutas Apache, secretos privados, copias y restauración | Pendiente |
+| Hosting | HTTPS, rutas, secretos privados, copias y restauración | Publicación y restauración verificadas; falta copia cifrada fuera del servidor |
 
 En MySQL 8.0.46 local, la prueba P03 importó el esquema, verificó nueve tablas,
 10 FK y 10 CHECK, probó repositorios, consultas preparadas, commit y rollback,
@@ -30,7 +30,21 @@ P04 verificó en otra base temporal la creación única de `Gogloglo` y
 rollback ante un fallo en la segunda inserción. P05 verificó por HTTP los dos
 logins, cookies, CSRF, expiración, logout, límite por IP y registros de acceso
 aislados. P10–P12 verifican también el aislamiento de intentos y estadísticas.
-Falta comprobar HTTPS/cookies en el hosting real.
+El login HTTPS se comprobó en el servidor real; la revisión completa de
+cookies y CSRF en producción queda para P14.
+
+## Publicación P13 — 2026-10-12
+
+- HTTPS válido y renovación simulada correctamente.
+- `/health` respondió 200; `/api/auth/me` sin sesión respondió 401; una ruta
+  SPA interna cargó y un archivo privado devolvió 403.
+- Las dos cuentas iniciales se crearon con prompts ocultos. El login abrió el
+  panel y las pantallas principales cargaron con sesión.
+- Una copia SQL privada restauró 9 tablas y 2 cuentas en una base temporal;
+  la base temporal se eliminó.
+- Los parámetros e identificadores del servidor constan solo en documentación
+  local ignorada por Git. P14 revisará el contrato, las cookies, CSRF, límites,
+  rendimiento y una copia cifrada externa.
 
 Consulta `requisitos.txt` para historias y reglas de negocio. Al cerrar el
 port, registra aquí resultados reales y versiones del entorno comprobado.

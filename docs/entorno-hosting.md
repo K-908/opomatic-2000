@@ -45,17 +45,14 @@ Los límites de PHP CLI tampoco garantizan los valores de Apache o del hosting.
    no controla esta ruta. También se probará el tiempo de procesamiento de
    2.000 preguntas en ese servidor.
 
-## Datos pendientes del proveedor
+## Verificación del servidor elegido (12 de octubre de 2026)
 
-No se ha elegido uno todavía. Al seleccionarlo, registrar aquí:
+El servidor elegido cumple los requisitos de PHP y MariaDB. Se importó el
+esquema en una base temporal y se verificaron nueve tablas, diez claves
+foráneas, diez `CHECK` y el rechazo de inserciones inválidas. La aplicación
+funciona por HTTPS, con rutas API y SPA, login y configuración privada fuera
+del directorio público. Una copia SQL se restauró en otra base temporal.
 
-- Nombre del proveedor y plan; versiones PHP y MySQL/MariaDB disponibles.
-- Extensiones PHP activas, límites de POST, memoria y tiempo de ejecución.
-- Directorio público real y posibilidad de mantener archivos privados fuera.
-- Reglas de reescritura admitidas, HTTPS y gestión de certificados.
-- Ruta privada escribible para `AUTH_STORAGE_DIR` y detección HTTPS en PHP.
-- Resultado de importar `database/schema.sql` en una base vacía y de probar una
-  inserción con restricciones y rollback.
-
-La elección del hosting no impide empezar el backend local. La verificación de
-publicación se cerrará antes de P13/P14.
+Los parámetros e identificadores concretos del servidor se guardan en
+documentación local ignorada por Git. Queda pendiente mantener una copia
+cifrada fuera del servidor.

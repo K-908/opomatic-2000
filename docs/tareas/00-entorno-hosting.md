@@ -1,7 +1,7 @@
 # P00. Entorno local y requisitos del hosting
 
-Estado: **[~] En curso**. La comprobación local está terminada; falta verificar
-el proveedor concreto cuando se elija.
+Estado: **[x] Completado**. La comprobación local y del servidor elegido está
+terminada. Sus parámetros específicos se conservan solo en local.
 
 ## Trabajo local realizado — 2026-10-11
 
@@ -21,16 +21,13 @@ el proveedor concreto cuando se elija.
 - La base temporal fue eliminada después de verificarla. No se tocaron las
   bases existentes ni se guardaron credenciales en el repositorio.
 
-## Requisitos para elegir hosting
+## Comprobación del servidor elegido — 2026-10-12
 
-Están detallados en [`../entorno-hosting.md`](../entorno-hosting.md). Hay que
-confirmar la versión real de PHP y MySQL/MariaDB, las extensiones, permisos de
-base de datos, rutas Apache, HTTPS, límites de petición y separación de archivos
-públicos/privados. El servidor concreto sigue sin identificarse.
+Se comprobaron la versión de PHP y de MariaDB, las extensiones necesarias,
+la conexión PDO, la importación del esquema en una base temporal y las
+restricciones de integridad. También se verificaron HTTPS, enrutamiento de API
+y SPA, separación de archivos públicos y privados, login y restauración de
+una copia SQL en una segunda base temporal.
 
-## Cierre pendiente
-
-Cuando se elija hosting: registrar proveedor y versiones, probar importación
-del esquema en una base vacía de ese proveedor, comprobar reescritura de rutas
-y HTTPS, y actualizar este estado a terminado con evidencia. Esto no bloquea
-P01–P12, que pueden desarrollarse y probarse localmente.
+La configuración y los identificadores del servidor se documentan en un
+archivo local ignorado por Git.
