@@ -123,8 +123,8 @@ La API implementa `POST /api/auth/login`, `GET /api/auth/session`,
 `POST /api/auth/logout` y `GET /api/auth/accesses`. La sesión dura como máximo
 doce horas. Las peticiones que cambian estado envían `X-CSRF-Token`; React lo
 obtiene de la cookie `OPOMATIC_CSRF` después del login. El sexto intento de
-login desde una IP en un minuto devuelve 429. Los accesos muestran solo los
-50 registros más recientes de la cuenta autenticada.
+login desde una IP en un minuto devuelve 429. Solo Gogloglo puede consultar
+los 50 accesos más recientes de ambas cuentas; Virginia recibe 403.
 
 PHP necesita escribir en un directorio privado para sesiones y el límite de
 login. Por defecto usa `backend/var/auth`, ignorado por Git y separado de

@@ -107,9 +107,10 @@ assertAuth($secondLogin['status'] === 200, 'El login de Virginia debe funcionar.
 $firstAccesses = sendAuthRequest($gogloglo, $baseUrl . '/api/auth/accesses');
 $secondAccesses = sendAuthRequest($virginia, $baseUrl . '/api/auth/accesses');
 $firstList = json_decode($firstAccesses['body'], true);
-$secondList = json_decode($secondAccesses['body'], true);
-assertAuth($firstAccesses['status'] === 200 && count($firstList) === 1 && $firstList[0]['ipAddress'] === '127.0.0.1', 'Gogloglo solo debe ver su acceso.');
-assertAuth($secondAccesses['status'] === 200 && count($secondList) === 1 && $secondList[0]['ipAddress'] === '127.0.0.1', 'Virginia solo debe ver su acceso.');
+assertAuth($firstAccesses['status'] === 200 && count($firstList) === 2, 'Gogloglo debe ver los accesos de ambas cuentas.');
+assertAuth(array_column($firstList, 'username') === ['Virginia', 'Gogloglo'], 'El historial debe identificar las cuentas y ordenar los accesos recientes primero.');
+assertAuth($firstList[0]['ipAddress'] === '127.0.0.1', 'El historial debe incluir la IP de acceso.');
+assertAuth($secondAccesses['status'] === 403, 'Virginia no debe poder consultar los accesos.');
 assertAuth(str_ends_with($firstList[0]['accessedAtUtc'], 'Z'), 'Las fechas de acceso deben estar en UTC ISO 8601.');
 
 $db = (new PdoConnectionFactory())->connect($config);
@@ -120,7 +121,7 @@ for ($index = 0; $index < 55; $index++) {
     $extraAccess->execute(['username' => 'Gogloglo', 'ip' => '127.0.0.1']);
 }
 assertAuth(count(json_decode(sendAuthRequest($gogloglo, $baseUrl . '/api/auth/accesses')['body'], true)) === 50, 'El historial debe limitarse a 50 accesos.');
-assertAuth(count(json_decode(sendAuthRequest($virginia, $baseUrl . '/api/auth/accesses')['body'], true)) === 1, 'Una cuenta no debe ver accesos de otra.');
+assertAuth(sendAuthRequest($virginia, $baseUrl . '/api/auth/accesses')['status'] === 403, 'Virginia debe seguir sin acceso al historial.');
 
 $withoutCsrf = sendAuthRequest($virginia, $baseUrl . '/api/auth/logout', 'POST');
 assertAuth($withoutCsrf['status'] === 403, 'Logout sin CSRF debe devolver 403.');
@@ -154,4 +155,4 @@ assertAuth((int) $db->query('SELECT COUNT(*) FROM `LoginAccesses`')->fetchColumn
 curl_close($anonymous);
 curl_close($gogloglo);
 curl_close($virginia);
-echo "Auth HTTP: dos cuentas aisladas, sesiones, 12 h, logout, CSRF, 429 y accesos UTC OK\n";
+echo "Auth HTTP: Gogloglo ve accesos de ambas cuentas, Virginia recibe 403, sesiones, 12 h, logout, CSRF y 429 OK\n";

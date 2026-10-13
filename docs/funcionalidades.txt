@@ -15,7 +15,8 @@ ACCESO Y USUARIOS
   contraseña, sin registro público ni recuperación de contraseña.
 - Historial, estadísticas y progreso separados por cuenta.
 - Registro de fecha e IP observada por el servidor en cada login correcto.
-- Consulta de los últimos accesos de la propia cuenta.
+- Gogloglo puede consultar los últimos accesos de ambas cuentas; Virginia no
+  puede ver el historial de accesos.
 
 
 FUNCIONALIDADES BÁSICAS (MVP)

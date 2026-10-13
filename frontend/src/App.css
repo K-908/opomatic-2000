@@ -132,40 +132,6 @@ h1 {
   line-height: 1.7;
 }
 
-.project-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.65rem;
-  margin: 0;
-  padding: 0.7rem 1rem;
-  border-radius: 999px;
-  font-size: 0.9rem;
-  font-weight: 650;
-}
-
-.project-status--loading {
-  background: var(--loading-background);
-  color: var(--loading-color);
-}
-
-.project-status--available {
-  background: var(--status-background);
-  color: var(--status-color);
-}
-
-.project-status--error {
-  background: var(--error-background);
-  color: var(--error-color);
-}
-
-.status-dot {
-  width: 0.55rem;
-  height: 0.55rem;
-  border-radius: 50%;
-  background: currentColor;
-  box-shadow: 0 0 0 0.25rem color-mix(in srgb, currentColor 12%, transparent);
-}
-
 .primary-link {
   display: block;
   width: fit-content;

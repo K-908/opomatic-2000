@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { getAttempts, type AttemptListItem } from '../attempts/api/attemptsApi'
-import { getHealth, type HealthResponse } from '../health/api/getHealth'
 import { getStatisticsSummary, type StatisticsSummary } from './api/statisticsApi'
 import './statistics.css'
 
@@ -9,14 +8,8 @@ type DashboardState =
   | { status: 'error' }
   | { status: 'ready'; summary: StatisticsSummary; recent: AttemptListItem[] }
 
-type HealthState =
-  | { status: 'loading' }
-  | { status: 'available'; data: HealthResponse }
-  | { status: 'unavailable' }
-
-export function HomeDashboard() {
+export function HomeDashboard({ canViewAccesses }: { canViewAccesses: boolean }) {
   const [dashboard, setDashboard] = useState<DashboardState>({ status: 'loading' })
-  const [health, setHealth] = useState<HealthState>({ status: 'loading' })
 
   useEffect(() => {
     const controller = new AbortController()
@@ -34,34 +27,18 @@ export function HomeDashboard() {
         if (!controller.signal.aborted) setDashboard({ status: 'error' })
       })
 
-    getHealth(controller.signal)
-      .then((data) => {
-        if (!controller.signal.aborted) setHealth({ status: 'available', data })
-      })
-      .catch(() => {
-        if (!controller.signal.aborted) setHealth({ status: 'unavailable' })
-      })
-
     return () => controller.abort()
   }, [])
 
   return (
     <main className="dashboard-page">
-      <header className="dashboard-header">
-        <div>
-          <p className="eyebrow">OpoMatic-2000</p>
-          <h1>Tu preparación, pregunta a pregunta.</h1>
-          <p>Convierte cada test en una señal clara de qué estudiar después.</p>
-        </div>
-        <HealthStatus health={health} />
-      </header>
-
+      <h1 className="visually-hidden">Inicio</h1>
       <nav className="quick-actions" aria-label="Acciones principales">
         <a className="quick-action quick-action--primary" href="/tests/new">Crear un test</a>
         <a className="quick-action" href="/questions">Preguntas</a>
         <a className="quick-action" href="/attempts">Historial</a>
         <a className="quick-action" href="/statistics">Estadísticas por tema</a>
-        <a className="quick-action" href="/accesses">Accesos recientes</a>
+        {canViewAccesses && <a className="quick-action" href="/accesses">Accesos recientes</a>}
       </nav>
 
       {dashboard.status === 'loading' && <p className="dashboard-feedback" role="status">Cargando tu progreso…</p>}
@@ -109,16 +86,6 @@ function DashboardContent({ summary, recent }: { summary: StatisticsSummary; rec
       )}
     </>
   )
-}
-
-function HealthStatus({ health }: { health: HealthState }) {
-  if (health.status === 'unavailable') {
-    return <p className="project-status project-status--error" role="alert"><span className="status-dot" aria-hidden="true" />No se puede conectar con la API. Comprueba que el backend esté ejecutándose.</p>
-  }
-  if (health.status === 'available') {
-    return <p className="project-status project-status--available" role="status"><span className="status-dot" aria-hidden="true" />API disponible: {health.data.application}</p>
-  }
-  return <p className="project-status project-status--loading" role="status"><span className="status-dot" aria-hidden="true" />Comprobando la conexión con la API…</p>
 }
 
 function formatAccuracy(value: number | null) {

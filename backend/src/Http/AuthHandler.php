@@ -79,7 +79,10 @@ final class AuthHandler
     public function accesses(): Response
     {
         $username = $this->requireUser();
-        return Response::json((new LoginAccessRepository($this->database()))->recentFor($username), headers: ['Cache-Control' => 'no-store']);
+        if ($username !== 'Gogloglo') {
+            throw new HttpProblem(403, 'Acceso prohibido', 'No tienes permiso para ver los accesos.');
+        }
+        return Response::json((new LoginAccessRepository($this->database()))->recent(), headers: ['Cache-Control' => 'no-store']);
     }
 
     private function requireUser(): string

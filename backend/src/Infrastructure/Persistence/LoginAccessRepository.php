@@ -23,13 +23,13 @@ final readonly class LoginAccessRepository
         $query->execute(['username' => $username, 'ip' => $ipAddress]);
     }
 
-    /** @return list<array{accessedAtUtc: string, ipAddress: string}> */
-    public function recentFor(string $username): array
+    /** @return list<array{username: string, accessedAtUtc: string, ipAddress: string}> */
+    public function recent(): array
     {
         $query = $this->connection->prepare(
-            'SELECT `AccessedAtUtc`, `IpAddress` FROM `LoginAccesses` WHERE `Username` = :username ORDER BY `AccessedAtUtc` DESC, `Id` DESC LIMIT 50',
+            'SELECT `Username`, `AccessedAtUtc`, `IpAddress` FROM `LoginAccesses` ORDER BY `AccessedAtUtc` DESC, `Id` DESC LIMIT 50',
         );
-        $query->execute(['username' => $username]);
+        $query->execute();
         $accesses = [];
         foreach ($query->fetchAll() as $row) {
             $timestamp = DateTimeImmutable::createFromFormat('!Y-m-d H:i:s.u', $row['AccessedAtUtc'], new DateTimeZone('UTC'));
@@ -37,6 +37,7 @@ final readonly class LoginAccessRepository
                 throw new RuntimeException('Fecha de acceso inválida en MySQL.');
             }
             $accesses[] = [
+                'username' => $row['Username'],
                 'accessedAtUtc' => $timestamp->format('Y-m-d\TH:i:s\Z'),
                 'ipAddress' => $row['IpAddress'],
             ];

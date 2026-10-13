@@ -663,8 +663,9 @@ minuto.
     POST /auth/logout
     GET /auth/accesses
 
-`GET /auth/accesses` devuelve como máximo los 50 accesos correctos más recientes
-de la cuenta autenticada, con `accessedAtUtc` e `ipAddress`.
+`GET /auth/accesses` solo está disponible para Gogloglo. Devuelve como máximo
+los 50 accesos correctos más recientes de ambas cuentas, con `username`,
+`accessedAtUtc` e `ipAddress`. Virginia recibe 403.
 
 Las sesiones tienen caducidad absoluta de doce horas. La cookie
 `OPOMATICSESSID` es HttpOnly, SameSite=Lax y Secure en HTTPS. El servidor

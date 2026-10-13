@@ -15,7 +15,7 @@ test('P11/P12: empty states, pagination, immutable review, updated metrics and e
   await page.getByLabel('Nombre de usuario').fill('Gogloglo')
   await page.getByLabel('Contraseña').fill(process.env.OPOMATIC_E2E_GOGLOGLO_PASSWORD ?? '')
   await page.getByRole('button', { name: 'Iniciar sesión' }).click()
-  await expect(page.getByRole('heading', { name: 'Tu preparación, pregunta a pregunta.' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Resumen' })).toBeVisible()
   const before = await (await page.request.get('/api/statistics/summary')).json()
   const csrf = (await page.context().cookies()).find(cookie => cookie.name === 'OPOMATIC_CSRF')!.value
   const headers = { 'X-CSRF-Token': csrf }

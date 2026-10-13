@@ -5,7 +5,7 @@ test.beforeEach(async ({ page }) => {
   await page.getByLabel('Nombre de usuario').fill('Gogloglo')
   await page.getByLabel('Contraseña').fill(process.env.OPOMATIC_E2E_GOGLOGLO_PASSWORD ?? '')
   await page.getByRole('button', { name: 'Iniciar sesión' }).click()
-  await expect(page.getByRole('heading', { name: 'Tu preparación, pregunta a pregunta.' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Resumen' })).toBeVisible()
 })
 
 test('creates content, completes a test and updates history and statistics', async ({ page }) => {
@@ -73,7 +73,17 @@ test('creates content, completes a test and updates history and statistics', asy
   await page.getByRole('button', { name: 'Iniciar sesión' }).click()
   await expect(page.getByText('Tests terminados').locator('..').getByText('0', { exact: true })).toBeVisible()
 
+  await expect(page.getByRole('link', { name: 'Accesos', exact: true })).toHaveCount(0)
+  await page.goto('/accesses')
+  await expect(page).toHaveURL('/')
+  expect((await page.request.get('/api/auth/accesses')).status()).toBe(403)
+
+  await page.getByRole('button', { name: 'Cerrar sesión' }).click()
+  await page.getByLabel('Nombre de usuario').fill('Gogloglo')
+  await page.getByLabel('Contraseña').fill(process.env.OPOMATIC_E2E_GOGLOGLO_PASSWORD ?? '')
+  await page.getByRole('button', { name: 'Iniciar sesión' }).click()
   await page.goto('/accesses')
   await expect(page.getByRole('heading', { name: 'Accesos recientes' })).toBeVisible()
-  await expect(page.locator('.access-list code').first()).toContainText(/127\.0\.0\.1|::1/)
+  await expect(page.locator('.access-list')).toContainText('Gogloglo')
+  await expect(page.locator('.access-list')).toContainText('Virginia')
 })

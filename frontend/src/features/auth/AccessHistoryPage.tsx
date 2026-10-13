@@ -31,9 +31,10 @@ export function AccessHistoryPage() {
       {state.status === 'ready' && (
         <section className="access-panel">
           <ul className="access-list">
-            {state.accesses.map((access) => (
-              <li key={`${access.accessedAtUtc}-${access.ipAddress}`}>
+            {state.accesses.map((access, index) => (
+              <li key={`${access.username}-${access.accessedAtUtc}-${access.ipAddress}-${index}`}>
                 <time dateTime={access.accessedAtUtc}>{formatDate(access.accessedAtUtc)}</time>
+                <strong>{access.username}</strong>
                 <code>{access.ipAddress}</code>
               </li>
             ))}

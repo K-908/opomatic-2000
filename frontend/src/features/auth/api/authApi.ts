@@ -5,6 +5,7 @@ export interface AuthSession {
 }
 
 export interface LoginAccess {
+  username: string
   accessedAtUtc: string
   ipAddress: string
 }

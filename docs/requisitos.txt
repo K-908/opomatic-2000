@@ -263,11 +263,11 @@ Criterios de aceptación:
 - En caso de empate, aparece primero el tema con más preguntas contestadas.
 
 
-HU-11. Acceder con una cuenta y revisar sus accesos
+HU-11. Acceder con una cuenta y revisar los accesos
 
-Como estudiante,
-quiero identificarme con mi cuenta y ver sus accesos recientes,
-para mantener separado mi progreso y detectar un posible uso compartido.
+Como Gogloglo,
+quiero identificarme y ver los accesos recientes de ambas cuentas,
+para detectar un posible uso compartido.
 
 Criterios de aceptación:
 
@@ -278,7 +278,8 @@ Criterios de aceptación:
   el botón de login; no ofrece registro ni recuperación.
 - Una sesión válida dura como máximo doce horas y puede cerrarse manualmente.
 - Cada login correcto registra la fecha UTC y la IP observada por el backend.
-- Cada cuenta solo ve sus intentos, estadísticas y registros de acceso.
+- Cada cuenta solo ve sus intentos y estadísticas. Solo Gogloglo puede ver
+  los registros de acceso de ambas cuentas; Virginia no puede consultarlos.
 - Se parte de una base nueva y vacía; no se migran intentos de la versión .NET.
 - La MAC no se recopila porque un navegador web no puede obtenerla de forma
   fiable ni enviarla a través de Internet.

@@ -23,6 +23,14 @@ function App() {
   const [loggingOut, setLoggingOut] = useState(false)
   const [logoutError, setLogoutError] = useState(false)
   const { generatedTest, startTest, clearTest } = useTestSession()
+  const canViewAccesses = auth.status === 'authenticated' && auth.session.username === 'Gogloglo'
+
+  useEffect(() => {
+    if (auth.status === 'authenticated' && !canViewAccesses && path === '/accesses') {
+      window.history.replaceState(null, '', '/')
+      setPath('/')
+    }
+  }, [auth.status, canViewAccesses, path])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -132,8 +140,8 @@ function App() {
     else if (path === '/questions/new') page = <QuestionFormPage />
     else if (editMatch) page = <QuestionFormPage questionId={Number(editMatch[1])} />
     else if (path === '/topics') page = <TopicsPage />
-    else if (path === '/accesses') page = <AccessHistoryPage />
-    else page = <HomeDashboard />
+    else if (path === '/accesses') page = canViewAccesses ? <AccessHistoryPage /> : null
+    else page = <HomeDashboard canViewAccesses={canViewAccesses} />
   }
 
   return (
@@ -145,7 +153,7 @@ function App() {
             <span>OpoMatic-2000</span>
           </a>
           <nav className="site-account" aria-label="Cuenta y navegación">
-            <a href="/accesses">Accesos</a>
+            {canViewAccesses && <a href="/accesses">Accesos</a>}
             <span>{auth.session.username}</span>
             <button type="button" onClick={signOut} disabled={loggingOut}>{loggingOut ? 'Saliendo…' : 'Cerrar sesión'}</button>
             {logoutError && <span role="alert">No se pudo cerrar la sesión. Inténtalo de nuevo.</span>}
