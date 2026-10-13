@@ -77,7 +77,7 @@ Los errores inesperados devuelven 500 con `traceId` sin mostrar la excepción.
 
 4. LÍMITES INICIALES
 
-- Nombre de tema: 1 a 150 caracteres.
+- Nombre de tema: 1 a 300 caracteres.
 - Enunciado: 1 a 10.000 caracteres.
 - Texto de una opción: 1 a 1.000 caracteres.
 - Preguntas por test: 1 a 200.

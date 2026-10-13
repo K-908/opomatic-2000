@@ -20,7 +20,7 @@ CREATE TABLE `LoginAccesses` (
 
 CREATE TABLE `Topics` (
   `Id` INT NOT NULL AUTO_INCREMENT,
-  `Name` VARCHAR(150) NOT NULL,
+  `Name` VARCHAR(300) NOT NULL,
   `IsActive` TINYINT(1) NOT NULL DEFAULT 1,
   `CreatedAtUtc` DATETIME(6) NOT NULL,
   `UpdatedAtUtc` DATETIME(6) NOT NULL,
@@ -79,7 +79,7 @@ CREATE TABLE `TestAttempts` (
 CREATE TABLE `TestAttemptTopics` (
   `TestAttemptId` BIGINT NOT NULL,
   `OriginalTopicId` INT NOT NULL,
-  `TopicNameSnapshot` VARCHAR(150) NOT NULL,
+  `TopicNameSnapshot` VARCHAR(300) NOT NULL,
   PRIMARY KEY (`TestAttemptId`, `OriginalTopicId`),
   KEY `IX_TestAttemptTopics_OriginalTopicId` (`OriginalTopicId`),
   CONSTRAINT `FK_TestAttemptTopics_TestAttempts` FOREIGN KEY (`TestAttemptId`) REFERENCES `TestAttempts` (`Id`) ON DELETE CASCADE,
@@ -93,7 +93,7 @@ CREATE TABLE `TestAttemptQuestions` (
   `OriginalTopicId` INT NOT NULL,
   `DisplayOrder` INT NOT NULL,
   `StatementSnapshot` LONGTEXT NOT NULL,
-  `TopicNameSnapshot` VARCHAR(150) NOT NULL,
+  `TopicNameSnapshot` VARCHAR(300) NOT NULL,
   `Result` TINYINT UNSIGNED NOT NULL,
   PRIMARY KEY (`Id`),
   UNIQUE KEY `UX_TestAttemptQuestions_Attempt_DisplayOrder` (`TestAttemptId`, `DisplayOrder`),

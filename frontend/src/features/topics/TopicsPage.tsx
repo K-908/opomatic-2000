@@ -152,7 +152,7 @@ export function TopicsPage() {
               id="topic-name"
               name="name"
               value={name}
-              maxLength={150}
+              maxLength={300}
               aria-invalid={Boolean(nameError)}
               aria-describedby={nameError ? 'topic-name-error' : undefined}
               onChange={(event) => setName(event.target.value)}

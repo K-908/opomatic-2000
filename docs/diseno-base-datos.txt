@@ -76,3 +76,8 @@ base separada.
 No se reimportará `schema.sql` sobre una base con datos. Las modificaciones
 posteriores se harán con scripts incrementales versionados y comprobados en una
 base de prueba antes de aplicarlos al hosting.
+
+La ampliación del nombre de tema a 300 caracteres se aplica a bases existentes
+con `database/migrations/2026-10-13-topic-name-300.sql`; cambia `Topics.Name`
+y los dos snapshots históricos. `schema.sql` ya incluye las columnas ampliadas
+para instalaciones nuevas.

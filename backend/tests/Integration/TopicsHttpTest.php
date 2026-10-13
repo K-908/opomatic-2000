@@ -75,8 +75,9 @@ checkTopic((int) $db->query('SELECT COUNT(*) FROM `Questions` WHERE `IsActive` =
 checkTopic(topicRequest('/api/topics/' . $id . '/status', 'PATCH', ['isActive' => true])[0] === 204, 'Reactivar 204.');
 checkTopic(topicRequest('/api/topics/' . $id . '/status', 'PATCH', ['isActive' => true])[0] === 204, 'Estado idempotente.');
 checkTopic(topicRequest('/api/topics/' . $id, 'DELETE')[0] === 405, 'Sin borrado físico.');
-$limit = topicRequest('/api/topics', 'POST', ['name' => str_repeat('á', 150)]);
-checkTopic($limit[0] === 201, 'Límite Unicode de 150 caracteres.');
+$limit = topicRequest('/api/topics', 'POST', ['name' => str_repeat('á', 300)]);
+checkTopic($limit[0] === 201, 'Límite Unicode de 300 caracteres.');
+checkTopic(topicRequest('/api/topics', 'POST', ['name' => str_repeat('á', 301)])[0] === 400, '301 caracteres rechazados.');
 $db->exec('DELETE FROM `Questions`');
 $db->exec('DELETE FROM `Topics`');
 curl_close($client);

@@ -58,7 +58,7 @@ checkImport(iRequest($path, body: '{invalid')[0] === 400, 'JSON inválido.');
 checkImport(iRequest($path, body: '[]')[0] === 400, 'Objeto JSON obligatorio.');
 checkImport(iRequest($path, body: $valid, contentType: 'text/plain')[0] === 415, 'Content-Type JSON.');
 $invalidDocuments = [[], ['topics' => []], ['topics' => (object) []], ['topics' => [null]], ['topics' => [importTopic('Sin preguntas', [])]]];
-$invalid = $valid; $invalid['topics'][1]['name'] = str_repeat('á', 151); $invalidDocuments[] = $invalid;
+$invalid = $valid; $invalid['topics'][1]['name'] = str_repeat('á', 301); $invalidDocuments[] = $invalid;
 $invalid = $valid; $invalid['topics'][1]['questions'][0]['statement'] = ' '; $invalidDocuments[] = $invalid;
 $invalid = $valid; $invalid['topics'][1]['questions'][0]['statement'] = str_repeat('á', 10001); $invalidDocuments[] = $invalid;
 $invalid = $valid; $invalid['topics'][1]['questions'][0]['options'] = ['Uno']; $invalidDocuments[] = $invalid;
@@ -109,6 +109,11 @@ checkImport($response[0] === 201 && $response[1]['importedQuestions'] === 2000, 
 $manyTopics = array_map(static fn (int $index): array => importTopic('Tema masivo P08 ' . $index), range(1, 2000));
 $response = iRequest($path, body: ['topics' => $manyTopics]);
 checkImport($response[0] === 201 && $response[1] === ['createdTopics' => 2000, 'reusedTopics' => 0, 'importedQuestions' => 2000], '2.000 preguntas distribuidas entre 2.000 temas.');
+$longName = str_repeat('á', 300);
+$longImport = iRequest($path, body: ['topics' => [importTopic($longName)]]);
+$storedLength = $db->prepare('SELECT CHAR_LENGTH(`Name`) FROM `Topics` WHERE `Name` = :name');
+$storedLength->execute(['name' => $longName]);
+checkImport($longImport[0] === 201 && (int) $storedLength->fetchColumn() === 300, 'Importación con nombre Unicode de 300 caracteres.');
 // Restore the two initial topics for the browser; all data belongs to this disposable DB.
 $db->exec('DELETE FROM `QuestionOptions`'); $db->exec('DELETE FROM `Questions`');
 $query = $db->prepare('DELETE FROM `Topics` WHERE `Id` NOT IN (:existing, :inactive)'); $query->execute(['existing' => $existingId, 'inactive' => $inactiveId]);
