@@ -279,3 +279,19 @@ implementado y probado. Estadísticas, hosting y cierre integral pendientes.
   de las cuatro consultas en `openapi-progress.json`; las demás rutas se
   documentarán durante P14. P13 y P14 siguen pendientes, junto con la
   verificación del proveedor de P00; estas pruebas locales no certifican hosting.
+
+## Ampliación del nombre de tema a 300 caracteres — 2026-10-13
+
+- PHP: sintaxis correcta y validación Unicode de 300 admitidos/301 rechazados.
+  El flujo de importación JSON guardó un tema de 300 caracteres y una pregunta
+  en una base temporal; 301 devolvió error en `topics[0].name`.
+- La migración se probó sobre el esquema anterior en MariaDB: amplió las tres
+  columnas de 150 a 300, conservó datos existentes y pudo repetirse. Se aplicó
+  en producción tras un volcado SQL privado.
+- Frontend: build correcto y Vitest 54 pruebas en 14 archivos. El servidor
+  sirve por HTTPS el nuevo JavaScript y `/health` responde 200; las tres
+  columnas de producción son `VARCHAR(300)`.
+- Las pruebas HTTP completas de importación se actualizaron para 300/301,
+  pero no se ejecutaron en esta sesión porque el MySQL local requería una
+  contraseña administrativa no disponible. El flujo de dominio y persistencia
+  sí se comprobó en una base temporal del servidor.
