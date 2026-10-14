@@ -133,6 +133,15 @@ checkQuestion(qRequest('/api/questions/' . $id, 'DELETE')[0] === 405, 'Sin borra
 checkQuestion($db->query('SELECT * FROM `TestAttemptQuestions`')->fetchAll() === $historicalQuestions && $db->query('SELECT * FROM `TestAttemptOptions`')->fetchAll() === $historicalOptions, 'Snapshots históricos conservados.');
 $limitBody = questionBody($topic, str_repeat('á', 10000)); $limitBody['options'][0]['text'] = str_repeat('á', 1000);
 checkQuestion(qRequest('/api/questions', 'POST', $limitBody)[0] === 201, 'Límites Unicode inclusivos.');
+$threeOptionBody = questionBody($topic, 'Pregunta de tres opciones');
+array_pop($threeOptionBody['options']);
+$threeOptionCreated = qRequest('/api/questions', 'POST', $threeOptionBody);
+checkQuestion($threeOptionCreated[0] === 201 && count($threeOptionCreated[1]['options']) === 3, 'Alta de pregunta con tres opciones.');
+$threeOptionId = $threeOptionCreated[1]['id'];
+$threeOptionBody['statement'] = 'Pregunta de tres opciones editada';
+checkQuestion(qRequest('/api/questions/' . $threeOptionId, 'PUT', $threeOptionBody)[0] === 200, 'Edición de pregunta con tres opciones.');
+$fourOptionEdit = questionBody($topic, 'No debe cambiar el número de opciones');
+checkQuestion(qRequest('/api/questions/' . $threeOptionId, 'PUT', $fourOptionEdit)[0] === 400, 'La edición debe conservar los IDs de las opciones.');
 $firstClient = $client; $client = curl_init(); curl_setopt_array($client, [CURLOPT_RETURNTRANSFER => true, CURLOPT_COOKIEFILE => '', CURLOPT_TIMEOUT => 5]);
 checkQuestion(qRequest('/api/auth/login', 'POST', ['username' => 'Virginia', 'password' => getenv('OPOMATIC_E2E_VIRGINIA_PASSWORD')])[0] === 200 && qRequest('/api/questions/' . $id)[0] === 200, 'Banco compartido entre cuentas.');
 curl_close($firstClient); curl_close($client);

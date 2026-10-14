@@ -52,7 +52,7 @@ Ejemplo:
   "traceId": "00-...",
   "errors": {
     "statement": ["El enunciado es obligatorio."],
-    "options": ["La pregunta debe contener exactamente cuatro opciones."]
+    "options": ["La pregunta debe contener tres o cuatro opciones."]
   }
 }
 
@@ -254,7 +254,7 @@ Validaciones:
 
 - El tema existe y está activo.
 - Enunciado obligatorio y dentro del límite.
-- Exactamente cuatro opciones con posiciones 1, 2, 3 y 4.
+- Tres o cuatro opciones con posiciones consecutivas desde 1.
 - Textos obligatorios y dentro del límite.
 - Exactamente una opción correcta; isCorrect debe ser booleano en cada opción.
 
@@ -265,9 +265,10 @@ Respuesta 201: detalle de la pregunta creada y Location: /api/questions/{id}. Un
 
     PUT /questions/{id}
 
-Utiliza el mismo cuerpo que la creación. Las cuatro opciones existentes se
+Utiliza el mismo cuerpo que la creación. Las tres o cuatro opciones existentes se
 actualizan por posición dentro de una única transacción, conservando sus
 identificadores internos para no romper referencias históricas. No modifica snapshots de intentos existentes. Las validaciones devuelven errors.statement, errors.options, errors.correctOption y errors.options[posición].text (posiciones 1–4), compatibles con React.
+El número de opciones de una pregunta existente se conserva al editarla.
 
 Respuestas: 200, 400, 404 o 409.
 
@@ -320,7 +321,8 @@ Contrato definitivo inicial:
 
 Reglas:
 
-- correctOption es un entero con posiciones del 1 al 4.
+- correctOption es un entero con posiciones del 1 al 3 o del 1 al 4, según el número de opciones.
+- Cada pregunta admite tres o cuatro opciones.
 - Los nombres se comparan con utf8mb4_unicode_ci; también se ignoran acentos, igual que en Topics.
 - No se permiten temas repetidos dentro del mismo archivo, ignorando
   mayúsculas, minúsculas y espacios exteriores.
@@ -351,7 +353,7 @@ Un error de validación incluye rutas precisas, por ejemplo:
 {
   "errors": {
     "topics[0].questions[4].options": [
-      "Debe contener exactamente cuatro opciones."
+      "Debe contener tres o cuatro opciones."
     ]
   }
 }
@@ -484,7 +486,7 @@ positivo o null explícito. El orden de answers no afecta a la entrega.
 401 sin sesión, 403 sin CSRF o token de otra cuenta, 410 si ha caducado.
 
 La corrección usa el contenido actual del banco al entregar, incluso tras una
-desactivación lógica si el token sigue vigente. Deben conservarse los cuatro
+desactivación lógica si el token sigue vigente. Deben conservarse los tres o cuatro
 IDs de opciones del token y existir una única correcta. Se guardan instantáneas
 del contenido usado al corregir. Cambios posteriores no afectan al intento.
 

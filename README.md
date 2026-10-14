@@ -173,12 +173,12 @@ Para repetir la regresión de autenticación usa `-Authentication` por separado.
 
 La API implementa lista paginada, detalle administrativo, alta, edición y estado
 lógico en `/api/questions`. Admite filtros por tema, preguntas inactivas y texto,
-con páginas de hasta 100 elementos. El detalle muestra las cuatro opciones y su
+con páginas de hasta 100 elementos. El detalle muestra las tres o cuatro opciones y su
 respuesta correcta; la lista no expone opciones. El banco es compartido entre
 las dos cuentas autenticadas.
 
 PHP valida enunciados de 1–10.000 caracteres, textos de opción de 1–1.000,
-cuatro posiciones distintas y una única correcta. Alta y edición son atómicas;
+posiciones consecutivas para tres o cuatro opciones y una única correcta. Alta y edición son atómicas;
 al editar se conservan los IDs de las opciones y los snapshots históricos.
 Guardar o reactivar exige un tema activo. El listado administrativo permite
 mantener preguntas de temas inactivos; la generación de P09 las excluye. La importación JSON corresponde a P08.
@@ -197,7 +197,7 @@ Vite, comprueba copia/restauración y elimina sus bases y servidores temporales.
 
 `POST /api/questions/import` acepta el documento de
 `frontend/public/examples/questions-import-example.json`, con temas, preguntas,
-cuatro textos de opción y `correctOption` de 1 a 4. Requiere sesión y CSRF.
+tres o cuatro textos de opción y `correctOption` dentro de esas posiciones. Requiere sesión y CSRF.
 El formulario permite seleccionar un archivo, previsualizar cantidad de temas
 y preguntas, confirmar y consultar el resumen de temas creados/reutilizados.
 

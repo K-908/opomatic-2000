@@ -20,8 +20,8 @@ filas de SQL Server ni de SQLite.
 - Topics: nombre único, estado activo y fechas de creación/actualización.
 - Questions: tema, enunciado, estado activo y fechas. Cada pregunta pertenece
   a un tema; la desactivación de tema excluye sus preguntas de nuevos tests.
-- QuestionOptions: cuatro opciones por pregunta, posición 1..4 y marca de
-  corrección. La regla de exactamente cuatro y una correcta se valida en PHP
+- QuestionOptions: tres o cuatro opciones por pregunta, posiciones consecutivas
+  desde 1 y marca de corrección. La regla de una correcta se valida en PHP
   dentro de una transacción; el esquema impide posiciones duplicadas.
 - TestAttempts: entrega con `SubmissionId` único, usuario, fecha, contadores,
   nota y versión de puntuación. El `Score` es BIGINT en millonésimas de punto.

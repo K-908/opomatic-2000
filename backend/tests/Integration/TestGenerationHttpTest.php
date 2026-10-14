@@ -109,6 +109,14 @@ foreach ([1, 200, 130, 200, 200, 200] as $requested) {
 checkGeneration(count(array_unique(array_map('json_encode', $orders))) === count($orders) && in_array(true, $optionOrders, true), 'Preguntas y opciones se barajan.');
 checkGeneration(count(array_unique($tokens)) === count($tokens), 'Tokens distintos.');
 checkGeneration((int) $db->query('SELECT COUNT(*) FROM TestAttempts')->fetchColumn() === $before, 'Generar no guarda un intento.');
+$threeTopic = createGenerationTopic('Tres opciones P09');
+$db->prepare('INSERT INTO Questions (TopicId, Statement, IsActive, CreatedAtUtc, UpdatedAtUtc) VALUES (?, ?, 1, UTC_TIMESTAMP(6), UTC_TIMESTAMP(6))')->execute([$threeTopic, 'Pregunta de tres opciones']);
+$threeQuestionId = (int) $db->lastInsertId();
+$threeOptionInsert = $db->prepare('INSERT INTO QuestionOptions (QuestionId, Text, Position, IsCorrect) VALUES (?, ?, ?, ?)');
+foreach ([1, 2, 3] as $position) { $threeOptionInsert->execute([$threeQuestionId, 'Opción ' . $position, $position, (int) ($position === 2)]); }
+$threeTest = generationRequest($path, body: ['topicIds' => [$threeTopic], 'numberOfQuestions' => 1]);
+checkGeneration($threeTest[0] === 200 && count($threeTest[1]['questions'][0]['options']) === 3
+    && count($protector->verify($threeTest[1]['testToken'], 'Gogloglo')['questions'][0]['options']) === 3, 'Generación y token con tres opciones.');
 checkGeneration(generationRequest('/api/auth/logout')[0] === 204, 'Logout.');
 checkGeneration(generationRequest('/api/auth/login', body: ['username' => 'Virginia', 'password' => getenv('OPOMATIC_E2E_VIRGINIA_PASSWORD')])[0] === 200, 'Login segunda cuenta.');
 $second = generationRequest($path, body: ['topicIds' => [$a], 'numberOfQuestions' => 1])[1];

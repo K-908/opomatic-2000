@@ -82,7 +82,7 @@ final readonly class TestTokenProtector
         foreach ($payload['questions'] as $index => $question) {
             if (!is_array($question) || !self::id($question['questionId'] ?? null)
                 || ($question['displayOrder'] ?? null) !== $index + 1 || !is_array($question['options'] ?? null)
-                || !array_is_list($question['options']) || count($question['options']) !== 4) { return false; }
+                || !array_is_list($question['options']) || !in_array(count($question['options']), [3, 4], true)) { return false; }
             $questionIds[] = $question['questionId'];
             foreach ($question['options'] as $position => $option) {
                 if (!is_array($option) || !self::id($option['optionId'] ?? null)

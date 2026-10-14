@@ -7,6 +7,7 @@ namespace OpoMatic2000\Application;
 use DomainException;
 use OutOfBoundsException;
 use OpoMatic2000\Domain\QuestionInput;
+use OpoMatic2000\Domain\QuestionValidation;
 use OpoMatic2000\Infrastructure\Persistence\QuestionRepository;
 use OpoMatic2000\Infrastructure\Persistence\TransactionManager;
 use RuntimeException;
@@ -41,7 +42,10 @@ final readonly class QuestionService
     {
         return $this->transactions->run(function () use ($id, $input): array {
             $existing = $this->requireQuestion($id, true);
-            if (count($existing['Options']) !== 4) { throw new RuntimeException('La pregunta persistida tiene opciones inconsistentes.'); }
+            if (!in_array(count($existing['Options']), [3, 4], true)) { throw new RuntimeException('La pregunta persistida tiene opciones inconsistentes.'); }
+            if (count($existing['Options']) !== count($input->options)) {
+                throw new QuestionValidation(['options' => ['Al editar, conserva el número de opciones de la pregunta.']]);
+            }
             $this->requireActiveTopic($input->topicId);
             $this->questions->update($id, $input);
             return $this->get($id);

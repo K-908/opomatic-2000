@@ -23,11 +23,12 @@ final readonly class QuestionInput
             $errors['statement'] = ['El enunciado es obligatorio y no puede superar los 10.000 caracteres.'];
         }
         $rawOptions = $body->options ?? null;
+        $optionCount = is_array($rawOptions) ? count($rawOptions) : 0;
         $options = [];
         $positions = [];
         $correct = 0;
-        if (!is_array($rawOptions) || count($rawOptions) !== 4) {
-            $errors['options'] = ['La pregunta debe contener exactamente cuatro opciones.'];
+        if (!in_array($optionCount, [3, 4], true)) {
+            $errors['options'] = ['La pregunta debe contener tres o cuatro opciones.'];
         } else {
             foreach ($rawOptions as $raw) {
                 if (!$raw instanceof stdClass) {
@@ -36,7 +37,7 @@ final readonly class QuestionInput
                 }
                 $position = $raw->position ?? null;
                 if (!is_int($position) || $position < 1 || $position > 4 || in_array($position, $positions, true)) {
-                    $errors['options'] = ['Las posiciones deben ser 1, 2, 3 y 4 sin repetirse.'];
+                    $errors['options'] = ['Las posiciones deben ser consecutivas desde 1 y no repetirse.'];
                 } else {
                     $positions[] = $position;
                 }
@@ -54,6 +55,10 @@ final readonly class QuestionInput
             }
             if ($correct !== 1) {
                 $errors['correctOption'] = ['Debe marcarse exactamente una respuesta correcta.'];
+            }
+            sort($positions);
+            if ($positions !== range(1, $optionCount)) {
+                $errors['options'] = ['Las posiciones deben ser consecutivas desde 1 y no repetirse.'];
             }
         }
         if ($errors !== []) {

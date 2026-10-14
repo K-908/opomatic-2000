@@ -40,7 +40,7 @@ Tema:
 Agrupación de preguntas que pertenecen a una misma materia de estudio.
 
 Pregunta:
-Enunciado asociado a un único tema y acompañado de exactamente cuatro
+Enunciado asociado a un único tema y acompañado de tres o cuatro
 opciones, de las cuales solo una es correcta.
 
 Test:
@@ -88,8 +88,8 @@ Criterios de aceptación:
 
 - Para crear una pregunta se debe indicar el enunciado.
 - Cada pregunta debe pertenecer a un único tema.
-- Cada pregunta debe tener exactamente cuatro opciones.
-- Exactamente una de las cuatro opciones debe estar marcada como correcta.
+- Cada pregunta debe tener tres o cuatro opciones.
+- Exactamente una de las opciones debe estar marcada como correcta.
 - No se puede guardar una pregunta que incumpla alguna de estas condiciones.
 - Se pueden consultar las preguntas existentes.
 - Se pueden editar el enunciado, el tema, las opciones y la respuesta correcta.
@@ -108,7 +108,7 @@ para evitar introducirlas manualmente una a una.
 Criterios de aceptación:
 
 - El sistema permite seleccionar un archivo JSON.
-- Cada pregunta importada contiene un enunciado, un tema, cuatro opciones y la
+- Cada pregunta importada contiene un enunciado, un tema, tres o cuatro opciones y la
   identificación de una única respuesta correcta.
 - El sistema valida el formato y el contenido antes de guardar las preguntas.
 - El sistema no importa como válida una pregunta que incumpla las reglas.
@@ -148,7 +148,7 @@ para poder completar el test de forma flexible.
 
 Criterios de aceptación:
 
-- Cada pregunta muestra su enunciado y cuatro opciones.
+- Cada pregunta muestra su enunciado y tres o cuatro opciones.
 - Solo se puede seleccionar una opción por pregunta.
 - Se puede cambiar una respuesta antes de finalizar el test.
 - Se puede dejar una pregunta sin contestar.
@@ -291,7 +291,7 @@ Criterios de aceptación:
 RN-01. Estructura de las preguntas
 
 - Cada pregunta pertenece a un único tema.
-- Cada pregunta tiene exactamente cuatro opciones.
+- Cada pregunta tiene tres o cuatro opciones.
 - Cada pregunta tiene exactamente una respuesta correcta.
 
 
@@ -482,7 +482,7 @@ antes de implementarse.
   eliminarse físicamente, para conservar la integridad del histórico.
 - La importación JSON es transaccional: primero se valida el archivo completo y,
   si alguna pregunta contiene errores, no se importa ninguna.
-- El orden de las cuatro opciones se aleatoriza al generar cada test.
+- El orden de las opciones se aleatoriza al generar cada test.
 - La nota se presenta siempre con dos decimales.
 - Los tests en curso no se guardan en el MVP. Deben realizarse de principio a
   fin; cerrar, recargar o abandonar la página provoca la pérdida del progreso.
@@ -496,5 +496,5 @@ antes de implementarse.
 
 - El esquema exacto y su comportamiento transaccional están definidos en
   diseno-api.txt, sección 8.
-- El JSON agrupa preguntas por tema, contiene cuatro opciones de texto y señala
-  la correcta mediante correctOption con una posición del 1 al 4.
+- El JSON agrupa preguntas por tema, contiene tres o cuatro opciones de texto y
+  señala la correcta mediante correctOption con una posición válida.

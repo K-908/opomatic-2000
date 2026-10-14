@@ -114,6 +114,11 @@ $longImport = iRequest($path, body: ['topics' => [importTopic($longName)]]);
 $storedLength = $db->prepare('SELECT CHAR_LENGTH(`Name`) FROM `Topics` WHERE `Name` = :name');
 $storedLength->execute(['name' => $longName]);
 checkImport($longImport[0] === 201 && (int) $storedLength->fetchColumn() === 300, 'Importación con nombre Unicode de 300 caracteres.');
+$threeOptionQuestion = importQuestion('Pregunta con tres opciones', 3);
+$threeOptionQuestion['options'] = ['Primera', 'Segunda', 'Tercera'];
+$threeImport = iRequest($path, body: ['topics' => [importTopic('Tema P08 existente', [$threeOptionQuestion])]]);
+$optionCount = $db->query("SELECT COUNT(*) FROM `QuestionOptions` o JOIN `Questions` q ON q.`Id` = o.`QuestionId` WHERE q.`Statement` = 'Pregunta con tres opciones'")->fetchColumn();
+checkImport($threeImport[0] === 201 && $threeImport[1]['importedQuestions'] === 1 && (int) $optionCount === 3, 'La importación admite tres opciones.');
 // Restore the two initial topics for the browser; all data belongs to this disposable DB.
 $db->exec('DELETE FROM `QuestionOptions`'); $db->exec('DELETE FROM `Questions`');
 $query = $db->prepare('DELETE FROM `Topics` WHERE `Id` NOT IN (:existing, :inactive)'); $query->execute(['existing' => $existingId, 'inactive' => $inactiveId]);

@@ -48,7 +48,7 @@ describe('QuestionImportPage', () => {
   it('presents every backend error with its exact path', async () => {
     importQuestionsMock.mockRejectedValue(new ApiError({
       title: 'Datos no válidos', status: 400, detail: 'Corrige los campos indicados.', errors: {
-        'topics[0].questions[0].options': ['Debe contener exactamente cuatro opciones.'],
+        'topics[0].questions[0].options': ['Debe contener tres o cuatro opciones.'],
         'topics[1].name': ['El tema está repetido.'],
       },
     }))

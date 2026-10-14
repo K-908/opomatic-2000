@@ -41,6 +41,11 @@ rejectsToken(static fn () => (new TestTokenProtector(random_bytes(32), $clock))-
 rejectsToken(static fn () => $protector->verify($issued['testToken'], 'Virginia'), 'forbidden');
 $virginia = $protector->issue('Virginia', [9], $questions);
 checkToken($protector->verify($virginia['testToken'], 'Virginia')['username'] === 'Virginia', 'Segunda cuenta válida.');
+$threeOptions = [['questionId' => 22, 'displayOrder' => 1, 'options' => [
+    ['optionId' => 105, 'displayOrder' => 1], ['optionId' => 106, 'displayOrder' => 2],
+    ['optionId' => 107, 'displayOrder' => 3]]]];
+$threeIssued = $protector->issue('Gogloglo', [9], $threeOptions);
+checkToken($protector->verify($threeIssued['testToken'], 'Gogloglo')['questions'] === $threeOptions, 'Token con tres opciones válido.');
 rejectsToken(static fn () => $protector->verify($virginia['testToken'], 'Gogloglo'), 'forbidden');
 $now = $payload['expiresAt'] - 1;
 checkToken($protector->verify($issued['testToken'], 'Gogloglo') === $payload, 'Válido hasta un segundo antes.');

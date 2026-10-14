@@ -50,11 +50,12 @@ final readonly class QuestionImportDocument
                     $errors[$path] = ['La pregunta debe ser un objeto válido.'];
                     continue;
                 }
-                $correct = $rawQuestion->correctOption ?? null;
-                $validCorrect = is_int($correct) && $correct >= 1 && $correct <= 4;
-                if (!$validCorrect) { $errors[$path . '.correctOption'] = ['La respuesta correcta debe ser una posición entre 1 y 4.']; }
                 $rawOptions = $rawQuestion->options ?? null;
-                $options = is_array($rawOptions) && count($rawOptions) === 4 ? array_map(static fn (mixed $text, int $index): stdClass => (object) [
+                $correct = $rawQuestion->correctOption ?? null;
+                $validCorrect = is_int($correct) && $correct >= 1 && $correct <= 4
+                    && is_array($rawOptions) && $correct <= count($rawOptions);
+                if (!$validCorrect) { $errors[$path . '.correctOption'] = ['La respuesta correcta debe ser una posición de las opciones disponibles (1 a 3 o 4).']; }
+                $options = is_array($rawOptions) && in_array(count($rawOptions), [3, 4], true) ? array_map(static fn (mixed $text, int $index): stdClass => (object) [
                     'position' => $index + 1, 'text' => $text, 'isCorrect' => $index + 1 === ($validCorrect ? $correct : 1),
                 ], $rawOptions, array_keys($rawOptions)) : null;
                 try {

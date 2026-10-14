@@ -39,7 +39,7 @@ final readonly class TestGenerationService
             $tokenQuestions = [];
             foreach ($ids as $index => $id) {
                 $row = $sources[$id];
-                if (count($row['Options']) !== 4) { throw new RuntimeException('La pregunta persistida tiene opciones inconsistentes.'); }
+                if (!in_array(count($row['Options']), [3, 4], true)) { throw new RuntimeException('La pregunta persistida tiene opciones inconsistentes.'); }
                 $options = [];
                 $tokenOptions = [];
                 foreach (SecureRandomizer::shuffle($row['Options']) as $position => $option) {
